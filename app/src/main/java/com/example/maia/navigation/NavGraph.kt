@@ -22,13 +22,14 @@ import com.example.maia.ui.home.HomeScreen
 import com.example.maia.ui.menu.MenuScreen
 import com.example.maia.ui.notifications.NotificationsScreen
 import com.example.maia.ui.orders.OrderHistoryScreen
+import com.example.maia.ui.shop.ShopScreen
 import com.example.maia.ui.wishlist.WishlistScreen
 import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.WishlistViewModel
 
 private val mainRoutes = setOf(
-    Screen.Home.route, Screen.Cart.route, Screen.Account.route,
-    Screen.Wishlist.route, Screen.Orders.route, Screen.Menu.route
+    Screen.Home.route, Screen.Shop.route, Screen.Cart.route,
+    Screen.Account.route, Screen.Wishlist.route, Screen.Orders.route
 )
 
 @Composable
@@ -68,7 +69,10 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
                 ForgotPasswordScreen(navController = navController, tokenManager = tokenManager)
             }
             composable(Screen.Home.route) {
-                HomeScreen(
+                HomeScreen(navController = navController)
+            }
+            composable(Screen.Shop.route) {
+                ShopScreen(
                     navController = navController,
                     tokenManager = tokenManager,
                     cartViewModel = cartViewModel,
