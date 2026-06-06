@@ -15,8 +15,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.maia.navigation.Screen
+
+@Preview(showBackground = true, name = "Bottom Nav Bar")
+@Composable
+fun BottomNavBarPreview() {
+    BottomNavBar(navController = rememberNavController(), currentRoute = Screen.Home.route, cartCount = 3)
+}
 
 @Composable
 fun BottomNavBar(navController: NavController, currentRoute: String?, cartCount: Int = 0) {
@@ -38,13 +46,13 @@ fun BottomNavBar(navController: NavController, currentRoute: String?, cartCount:
             )
             NavIcon(
                 icon = Icons.Default.Menu,
-                selected = false,
-                onClick = { navController.navigateTo(currentRoute, Screen.Home.route) }
+                selected = currentRoute == Screen.Shop.route,
+                onClick = { navController.navigateTo(currentRoute, Screen.Shop.route) }
             )
             NavIcon(
                 icon = Icons.Default.Search,
                 selected = false,
-                onClick = { navController.navigateTo(currentRoute, Screen.Home.route) }
+                onClick = { navController.navigateTo(currentRoute, Screen.Shop.route) }
             )
             Box {
                 NavIcon(

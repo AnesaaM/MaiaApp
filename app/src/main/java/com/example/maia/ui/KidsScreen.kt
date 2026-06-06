@@ -7,12 +7,19 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.example.maia.model.KidsCards
 import com.example.maia.network.RetrofitInstance
 import kotlinx.coroutines.launch
+
+@Preview(showBackground = true, name = "Kids Screen")
+@Composable
+fun KidsScreenPreview() {
+    KidsScreen()
+}
 
 @Composable
 fun KidsScreen() {
