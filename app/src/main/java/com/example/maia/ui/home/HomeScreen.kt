@@ -107,13 +107,12 @@ fun HomeScreen(navController: NavController) {
                 .clipToBounds()
         ) {
             val screenWidth = constraints.maxWidth.toFloat()
-            // Shpejtësia: lëviz nga 0 deri te -screenWidth (një "loop" i plotë)
-            val translationX = offsetX * screenWidth
+            val tx = offsetX * screenWidth
 
             Text(
                 text = marqueeText,
                 modifier = Modifier
-                    .graphicsLayer { translationX = translationX }
+                    .graphicsLayer { translationX = tx }
                     .wrapContentWidth(unbounded = true),
                 fontSize = 64.sp,
                 fontFamily = FontFamily.Serif,
