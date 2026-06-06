@@ -28,7 +28,7 @@ import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.WishlistViewModel
 
 private val mainRoutes = setOf(
-    Screen.Home.route, Screen.Shop.route, Screen.Cart.route,
+    Screen.Home.route, Screen.Shop.route, Screen.Menu.route, Screen.Cart.route,
     Screen.Account.route, Screen.Wishlist.route, Screen.Orders.route,
     Screen.Notifications.route
 )

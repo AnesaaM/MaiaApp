@@ -101,7 +101,6 @@ fun MenuScreen(navController: NavController) {
                     tint = MaiaText,
                     modifier = Modifier
                         .size(22.dp)
-                        .clickable { navController.popBackStack() }
                 )
 
                 Spacer(Modifier.width(16.dp))
