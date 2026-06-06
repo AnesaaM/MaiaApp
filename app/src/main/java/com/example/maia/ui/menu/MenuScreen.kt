@@ -3,142 +3,231 @@ package com.example.maia.ui.menu
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ChevronRight
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.example.maia.navigation.Screen
+import androidx.navigation.compose.rememberNavController
 import com.example.maia.ui.components.MaiaBackground
+import com.example.maia.ui.components.MaiaBlob
 import com.example.maia.ui.components.MaiaText
 import com.example.maia.ui.components.MaiaTextSecondary
+
+private val womanCategories = listOf(
+    "VIEW ALL", "TOPS", "DRESSES", "BOTTOMS",
+    "OUTERWEAR", "SWIMWEAR", "MATCHING SETS", "FOOTWEAR", "ACCESSORIES"
+)
+private val manCategories = listOf(
+    "VIEW ALL", "TOPS", "BOTTOMS", "SUITS & FORMALWEAR",
+    "OUTERWEAR", "SWIMWEAR", "FOOTWEAR", "ACCESSORIES"
+)
+private val kidsCategories = listOf(
+    "VIEW ALL", "T-SHIRTS", "DRESSES", "TOPS", "JEANS", "SHORTS"
+)
+
+private val tabs = listOf("WOMAN", "MAN", "KIDS")
 
 @Preview(showBackground = true, name = "Menu Screen")
 @Composable
 fun MenuScreenPreview() {
-    MenuScreen(navController = androidx.navigation.compose.rememberNavController())
+    MenuScreen(navController = rememberNavController())
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MenuScreen(navController: NavController) {
+    var selectedTab by remember { mutableIntStateOf(0) }
+    var searchQuery by remember { mutableStateOf("") }
+    val blobColor = MaiaBlob
 
-    val categories = listOf(
-        "WOMAN" to "New arrivals, dresses, tops & more",
-        "MAN"   to "Shirts, trousers, outerwear & more",
-        "KIDS"  to "Clothing for boys & girls"
-    )
+    val categories = when (selectedTab) {
+        0 -> womanCategories
+        1 -> manCategories
+        else -> kidsCategories
+    }
 
-    val links = listOf("ABOUT MAIA", "STORES", "SUSTAINABILITY", "CONTACT US")
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaiaText)
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaiaBackground)
-            )
-        },
-        containerColor = MaiaBackground
-    ) { padding ->
-        Column(
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaiaBackground)
+            .verticalScroll(rememberScrollState())
+    ) {
+        // Header blob
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
+                .fillMaxWidth()
+                .height(160.dp)
+                .drawBehind {
+                    val w = size.width
+                    val h = size.height
+                    val path = Path().apply {
+                        moveTo(0f, 0f)
+                        lineTo(w, 0f)
+                        lineTo(w, h * 0.68f)
+                        cubicTo(w * 0.82f, h * 1.05f, w * 0.60f, h * 0.72f, w * 0.44f, h * 0.90f)
+                        cubicTo(w * 0.28f, h * 1.08f, w * 0.12f, h * 0.78f, 0f, h * 0.85f)
+                        close()
+                    }
+                    drawPath(path, blobColor)
+                }
         ) {
-            Spacer(Modifier.height(8.dp))
-
-            Text(
-                "SHOP",
-                modifier = Modifier.padding(horizontal = 24.dp),
-                fontSize = 10.sp,
-                letterSpacing = 3.sp,
-                color = MaiaTextSecondary
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            categories.forEach { (label, subtitle) ->
-                Row(
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Hamburger icon
+                Icon(
+                    Icons.Default.Menu,
+                    contentDescription = null,
+                    tint = MaiaText,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            navController.navigate(Screen.Home.route) {
-                                popUpTo(Screen.Home.route) { inclusive = true }
+                        .size(22.dp)
+                        .clickable { navController.popBackStack() }
+                )
+
+                Spacer(Modifier.width(16.dp))
+
+                // Tabs: WOMAN MAN KIDS
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                    verticalAlignment = Alignment.Bottom,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    tabs.forEachIndexed { index, label ->
+                        val selected = selectedTab == index
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.clickable { selectedTab = index }
+                        ) {
+                            Text(
+                                text = label,
+                                fontSize = if (selected) 22.sp else 18.sp,
+                                fontFamily = FontFamily.Serif,
+                                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Light,
+                                color = if (selected) MaiaText else MaiaTextSecondary,
+                                letterSpacing = 1.sp
+                            )
+                            if (selected) {
+                                Spacer(Modifier.height(3.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(5.dp)
+                                        .clip(CircleShape)
+                                        .background(MaiaText)
+                                )
                             }
                         }
-                        .padding(horizontal = 24.dp, vertical = 14.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column {
-                        Text(
-                            label,
-                            fontSize = 22.sp,
-                            fontFamily = FontFamily.Serif,
-                            fontWeight = FontWeight.Light,
-                            color = MaiaText,
-                            letterSpacing = 2.sp
-                        )
-                        Spacer(Modifier.height(2.dp))
-                        Text(subtitle, fontSize = 11.sp, color = MaiaTextSecondary)
                     }
-                    Icon(
-                        Icons.Default.ChevronRight,
-                        contentDescription = null,
-                        tint = MaiaTextSecondary,
-                        modifier = Modifier.size(18.dp)
-                    )
                 }
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                    color = Color(0xFFEDE8E3),
-                    thickness = 0.5.dp
-                )
-            }
 
-            Spacer(Modifier.height(32.dp))
-
-            Text(
-                "EXPLORE",
-                modifier = Modifier.padding(horizontal = 24.dp),
-                fontSize = 10.sp,
-                letterSpacing = 3.sp,
-                color = MaiaTextSecondary
-            )
-
-            Spacer(Modifier.height(12.dp))
-
-            links.forEach { label ->
+                // MAIA italic
                 Text(
-                    label,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {}
-                        .padding(horizontal = 24.dp, vertical = 14.dp),
-                    fontSize = 13.sp,
-                    letterSpacing = 1.5.sp,
-                    color = MaiaText
-                )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                    color = Color(0xFFEDE8E3),
-                    thickness = 0.5.dp
+                    text = "MAIA",
+                    fontSize = 18.sp,
+                    fontFamily = FontFamily.Serif,
+                    fontStyle = FontStyle.Italic,
+                    fontWeight = FontWeight.Medium,
+                    color = MaiaText,
+                    letterSpacing = 2.sp
                 )
             }
         }
+
+        Spacer(Modifier.height(32.dp))
+
+        // Collection + category list
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            verticalAlignment = Alignment.Top
+        ) {
+            Text(
+                text = "COLLECTION",
+                fontSize = 10.sp,
+                letterSpacing = 2.sp,
+                color = MaiaTextSecondary,
+                modifier = Modifier.width(90.dp)
+            )
+
+            Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
+                categories.forEach { category ->
+                    Text(
+                        text = category,
+                        fontSize = 14.sp,
+                        letterSpacing = 2.sp,
+                        color = MaiaText,
+                        fontWeight = FontWeight.Normal,
+                        modifier = Modifier.clickable { }
+                    )
+                }
+                // SALE in green
+                Text(
+                    text = "SALE",
+                    fontSize = 14.sp,
+                    letterSpacing = 2.sp,
+                    color = Color(0xFF2E7D32),
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clickable { }
+                )
+            }
+        }
+
+        Spacer(Modifier.height(48.dp))
+
+        // Search bar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+        ) {
+            Column {
+                if (searchQuery.isEmpty()) {
+                    Text(
+                        "WHAT ARE YOU LOOKING FOR?",
+                        fontSize = 11.sp,
+                        letterSpacing = 1.5.sp,
+                        color = Color(0xFFBBAA9F)
+                    )
+                } else {
+                    Text(
+                        searchQuery,
+                        fontSize = 11.sp,
+                        letterSpacing = 1.5.sp,
+                        color = MaiaText
+                    )
+                }
+                Spacer(Modifier.height(6.dp))
+                HorizontalDivider(color = Color(0xFFD0BDB5), thickness = 0.8.dp)
+            }
+            // Invisible click area
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(32.dp)
+                    .clickable { }
+            )
+        }
+
+        Spacer(Modifier.height(40.dp))
     }
 }
