@@ -10,6 +10,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -70,7 +73,21 @@ fun HomeScreen(
             .fillMaxSize()
             .background(MaiaBackground)
     ) {
-        BlobHeader()
+        BlobHeader(
+            actions = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { showSearch = !showSearch }, modifier = Modifier.size(40.dp)) {
+                        Icon(Icons.Default.Search, contentDescription = "Search", tint = MaiaText, modifier = Modifier.size(20.dp))
+                    }
+                    IconButton(onClick = { navController.navigate(Screen.Account.route) }, modifier = Modifier.size(40.dp)) {
+                        Icon(Icons.Default.Person, contentDescription = "Account", tint = MaiaText, modifier = Modifier.size(20.dp))
+                    }
+                    IconButton(onClick = { navController.navigate(Screen.Notifications.route) }, modifier = Modifier.size(40.dp)) {
+                        Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = MaiaText, modifier = Modifier.size(20.dp))
+                    }
+                }
+            }
+        )
 
         Row(
             modifier = Modifier
@@ -100,13 +117,6 @@ fun HomeScreen(
                         )
                     }
                 }
-            }
-            Spacer(Modifier.weight(1f))
-            IconButton(
-                onClick = { showSearch = !showSearch },
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(Icons.Default.Search, contentDescription = "Search", tint = MaiaText)
             }
         }
 

@@ -32,7 +32,8 @@ val MaiaAccent = Color(0xFFB5381A)
 @Composable
 fun BlobHeader(
     modifier: Modifier = Modifier,
-    height: Dp = 220.dp
+    height: Dp = 220.dp,
+    actions: @Composable (() -> Unit)? = null
 ) {
     Box(
         modifier = modifier
@@ -52,6 +53,16 @@ fun BlobHeader(
             color = MaiaText,
             letterSpacing = 6.sp
         )
+        if (actions != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(end = 8.dp, top = 4.dp)
+            ) {
+                actions()
+            }
+        }
     }
 }
 

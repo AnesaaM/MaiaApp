@@ -19,6 +19,7 @@ import com.example.maia.ui.auth.RegisterScreen
 import com.example.maia.ui.cart.CartScreen
 import com.example.maia.ui.components.BottomNavBar
 import com.example.maia.ui.home.HomeScreen
+import com.example.maia.ui.notifications.NotificationsScreen
 import com.example.maia.ui.orders.OrderHistoryScreen
 import com.example.maia.ui.wishlist.WishlistScreen
 import com.example.maia.viewmodel.CartViewModel
@@ -93,6 +94,9 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
                     wishlistViewModel = wishlistViewModel,
                     cartViewModel = cartViewModel
                 )
+            }
+            composable(Screen.Notifications.route) {
+                NotificationsScreen(navController = navController)
             }
         }
     }
