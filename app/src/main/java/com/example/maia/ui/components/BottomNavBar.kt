@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.ShoppingBag
@@ -70,6 +71,11 @@ fun BottomNavBar(navController: NavController, currentRoute: String?, cartCount:
                     }
                 }
             }
+            NavIcon(
+                icon = Icons.Default.Notifications,
+                selected = currentRoute == Screen.Notifications.route,
+                onClick = { navController.navigateTo(currentRoute, Screen.Notifications.route) }
+            )
             NavIcon(
                 icon = Icons.Default.Person,
                 selected = currentRoute == Screen.Account.route,

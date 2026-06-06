@@ -1,18 +1,27 @@
 package com.example.maia.ui.home
 
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.maia.ui.components.MaiaBackground
@@ -28,6 +37,20 @@ fun HomeScreenPreview() {
 @Composable
 fun HomeScreen(navController: NavController) {
     val blobColor = MaiaBlob
+
+    // Marquee animation
+    val infiniteTransition = rememberInfiniteTransition(label = "marquee")
+    val offsetX by infiniteTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = -1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 4000, easing = LinearEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "offsetX"
+    )
+
+    val marqueeText = "MAIA  ·  MAIA  ·  MAIA  ·  MAIA  ·  MAIA  ·  MAIA  ·  "
 
     Box(
         modifier = Modifier
@@ -76,17 +99,29 @@ fun HomeScreen(navController: NavController) {
                 }
         )
 
-        // MAIA text
-        Text(
-            text = "MAIA",
+        // MAIA marquee
+        BoxWithConstraints(
             modifier = Modifier
                 .align(Alignment.Center)
-                .padding(start = 16.dp, top = 40.dp),
-            fontSize = 72.sp,
-            fontFamily = FontFamily.Serif,
-            color = MaiaText,
-            letterSpacing = 6.sp,
-            fontWeight = FontWeight.Light
-        )
+                .fillMaxWidth()
+                .clipToBounds()
+        ) {
+            val screenWidth = constraints.maxWidth.toFloat()
+            // Shpejtësia: lëviz nga 0 deri te -screenWidth (një "loop" i plotë)
+            val translationX = offsetX * screenWidth
+
+            Text(
+                text = marqueeText,
+                modifier = Modifier
+                    .graphicsLayer { translationX = translationX }
+                    .wrapContentWidth(unbounded = true),
+                fontSize = 64.sp,
+                fontFamily = FontFamily.Serif,
+                color = MaiaText,
+                letterSpacing = 4.sp,
+                fontWeight = FontWeight.Light,
+                softWrap = false
+            )
+        }
     }
 }
