@@ -1,248 +1,92 @@
 package com.example.maia.ui.home
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import coil.compose.AsyncImage
-import com.example.maia.model.Product
-import com.example.maia.model.Section
-import com.example.maia.navigation.Screen
-import com.example.maia.ui.components.BlobHeader
-import com.example.maia.ui.components.MaiaAccent
 import com.example.maia.ui.components.MaiaBackground
+import com.example.maia.ui.components.MaiaBlob
 import com.example.maia.ui.components.MaiaText
-import com.example.maia.ui.components.MaiaTextSecondary
-import com.example.maia.util.NotificationHelper
-import com.example.maia.data.TokenManager
-import com.example.maia.viewmodel.CartViewModel
-import com.example.maia.viewmodel.ProductViewModel
-import com.example.maia.viewmodel.WishlistViewModel
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun HomeScreen(
-    navController: NavController,
-    tokenManager: TokenManager,
-    cartViewModel: CartViewModel,
-    wishlistViewModel: WishlistViewModel
-) {
-    val productVm: ProductViewModel = viewModel()
-    val context = LocalContext.current
-
-    val products = productVm.filteredProducts
-    val searchQuery = productVm.searchQuery.value
-    val isLoading = productVm.isLoading.value
-    val error = productVm.error.value
-    val currentSection = productVm.currentSection.value
-
-    var showSearch by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        wishlistViewModel.loadWishlist()
-    }
-
-    val tabs = listOf("WOMAN" to Section.WOMAN, "MAN" to Section.MAN, "KIDS" to Section.KIDS)
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaiaBackground)
-    ) {
-        BlobHeader()
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(24.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            tabs.forEach { (label, section) ->
-                val selected = currentSection == section
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable { productVm.switchSection(section) }
-                ) {
-                    Text(
-                        label,
-                        fontSize = 12.sp,
-                        letterSpacing = 1.5.sp,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selected) MaiaText else MaiaTextSecondary
-                    )
-                    if (selected) {
-                        Box(
-                            modifier = Modifier
-                                .size(4.dp)
-                                .background(MaiaText, RoundedCornerShape(2.dp))
-                        )
-                    }
-                }
-            }
-            Spacer(Modifier.weight(1f))
-            IconButton(
-                onClick = { showSearch = !showSearch },
-                modifier = Modifier.size(24.dp)
-            ) {
-                Icon(Icons.Default.Search, contentDescription = "Search", tint = MaiaText)
-            }
-        }
-
-        if (showSearch) {
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { productVm.updateSearch(it) },
-                placeholder = {
-                    Text(
-                        "WHAT ARE YOU LOOKING FOR?",
-                        fontSize = 11.sp,
-                        letterSpacing = 1.sp,
-                        color = MaiaTextSecondary
-                    )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp, vertical = 4.dp),
-                singleLine = true,
-                shape = RoundedCornerShape(4.dp),
-                colors = OutlinedTextFieldDefaults.colors(
-                    unfocusedBorderColor = Color(0xFFDDD0CA),
-                    focusedBorderColor = MaiaText,
-                    unfocusedContainerColor = Color.White,
-                    focusedContainerColor = Color.White
-                )
-            )
-        }
-
-        when {
-            isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = MaiaText, strokeWidth = 1.5.dp)
-            }
-            error != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Failed to load products", color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
-                    Spacer(Modifier.height(8.dp))
-                    TextButton(onClick = { productVm.loadProducts() }) {
-                        Text("RETRY", letterSpacing = 1.sp, color = MaiaText, fontSize = 11.sp)
-                    }
-                }
-            }
-            else -> LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(products) { product ->
-                    FashionProductCard(
-                        product = product,
-                        isWishlisted = wishlistViewModel.isWishlisted(product.id),
-                        onAddToCart = {
-                            cartViewModel.addToCart(product.id) {
-                                NotificationHelper.showCartNotification(context, product.title)
-                            }
-                        },
-                        onToggleWishlist = { wishlistViewModel.toggleWishlist(product.id) }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun FashionProductCard(
-    product: Product,
-    isWishlisted: Boolean,
-    onAddToCart: () -> Unit,
-    onToggleWishlist: () -> Unit
-) {
-    Column {
-        Box {
-            AsyncImage(
-                model = product.imageUrl,
-                contentDescription = product.title,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .background(Color(0xFFEDE8E3)),
-                contentScale = ContentScale.Crop
-            )
-            IconButton(
-                onClick = onToggleWishlist,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
-                    .size(32.dp)
-            ) {
-                Icon(
-                    if (isWishlisted) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
-                    contentDescription = null,
-                    tint = if (isWishlisted) Color(0xFF8B1A1A) else MaiaText,
-                    modifier = Modifier.size(18.dp)
-                )
-            }
-        }
-        Spacer(Modifier.height(6.dp))
-        Text(
-            product.title,
-            fontSize = 11.sp,
-            letterSpacing = 0.5.sp,
-            color = MaiaText,
-            maxLines = 1
-        )
-        Spacer(Modifier.height(2.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                "${String.format("%.0f", product.price)} EUR",
-                fontSize = 11.sp,
-                color = MaiaTextSecondary
-            )
-            TextButton(
-                onClick = onAddToCart,
-                contentPadding = PaddingValues(0.dp),
-                modifier = Modifier.height(20.dp)
-            ) {
-                Text("+", fontSize = 16.sp, color = MaiaText, fontWeight = FontWeight.Light)
-            }
-        }
-    }
-}
 
 @Preview(showBackground = true, name = "Home Screen")
 @Composable
 fun HomeScreenPreview() {
-    val context = LocalContext.current
-    HomeScreen(
-        navController = rememberNavController(),
-        tokenManager = com.example.maia.data.TokenManager(context),
-        cartViewModel = CartViewModel(),
-        wishlistViewModel = WishlistViewModel()
-    )
+    HomeScreen(navController = rememberNavController())
+}
+
+@Composable
+fun HomeScreen(navController: NavController) {
+    val blobColor = MaiaBlob
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaiaBackground)
+    ) {
+        // Top blob
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.45f)
+                .align(Alignment.TopCenter)
+                .drawBehind {
+                    val w = size.width
+                    val h = size.height
+                    val path = Path().apply {
+                        moveTo(0f, 0f)
+                        lineTo(w, 0f)
+                        lineTo(w, h * 0.62f)
+                        cubicTo(w * 0.80f, h * 1.0f, w * 0.58f, h * 0.68f, w * 0.42f, h * 0.86f)
+                        cubicTo(w * 0.26f, h * 1.05f, w * 0.10f, h * 0.75f, 0f, h * 0.82f)
+                        close()
+                    }
+                    drawPath(path, blobColor)
+                }
+        )
+
+        // Bottom blob
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.22f)
+                .align(Alignment.BottomCenter)
+                .drawBehind {
+                    val w = size.width
+                    val h = size.height
+                    val path = Path().apply {
+                        moveTo(0f, h * 0.35f)
+                        cubicTo(w * 0.15f, h * 0.05f, w * 0.35f, h * 0.5f, w * 0.55f, h * 0.25f)
+                        cubicTo(w * 0.75f, h * 0.0f, w * 0.88f, h * 0.4f, w, h * 0.2f)
+                        lineTo(w, h)
+                        lineTo(0f, h)
+                        close()
+                    }
+                    drawPath(path, blobColor)
+                }
+        )
+
+        // MAIA text
+        Text(
+            text = "MAIA",
+            modifier = Modifier
+                .align(Alignment.Center)
+                .padding(start = 16.dp, top = 40.dp),
+            fontSize = 72.sp,
+            fontFamily = FontFamily.Serif,
+            color = MaiaText,
+            letterSpacing = 6.sp,
+            fontWeight = FontWeight.Light
+        )
+    }
 }

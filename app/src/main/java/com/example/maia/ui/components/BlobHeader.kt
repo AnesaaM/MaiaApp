@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,10 +30,17 @@ val MaiaButton = Color(0xFF1C0A06)
 val MaiaBorder = Color(0xFFD8C8C2)
 val MaiaAccent = Color(0xFFB5381A)
 
+@Preview(showBackground = true, name = "Blob Header")
+@Composable
+fun BlobHeaderPreview() {
+    BlobHeader()
+}
+
 @Composable
 fun BlobHeader(
     modifier: Modifier = Modifier,
-    height: Dp = 220.dp
+    height: Dp = 220.dp,
+    actions: @Composable (() -> Unit)? = null
 ) {
     Box(
         modifier = modifier
@@ -52,6 +60,16 @@ fun BlobHeader(
             color = MaiaText,
             letterSpacing = 6.sp
         )
+        if (actions != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .statusBarsPadding()
+                    .padding(end = 8.dp, top = 4.dp)
+            ) {
+                actions()
+            }
+        }
     }
 }
 
