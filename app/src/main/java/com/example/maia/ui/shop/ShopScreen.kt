@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,6 +44,18 @@ import com.example.maia.viewmodel.WishlistViewModel
 import kotlinx.coroutines.launch
 
 private val sections = listOf("WOMAN" to Section.WOMAN, "MAN" to Section.MAN, "KIDS" to Section.KIDS)
+
+@Preview(showBackground = true, name = "Shop Screen")
+@Composable
+fun ShopScreenPreview() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    ShopScreen(
+        navController = androidx.navigation.compose.rememberNavController(),
+        tokenManager = com.example.maia.data.TokenManager(context),
+        cartViewModel = CartViewModel(),
+        wishlistViewModel = WishlistViewModel()
+    )
+}
 
 @Composable
 fun ShopScreen(

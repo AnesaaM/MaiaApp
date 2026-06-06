@@ -10,6 +10,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -54,6 +55,12 @@ class NotificationsViewModel : ViewModel() {
             } catch (_: Exception) {}
         }
     }
+}
+
+@Preview(showBackground = true, name = "Notifications Screen")
+@Composable
+fun NotificationsScreenPreview() {
+    NotificationsScreen(navController = androidx.navigation.compose.rememberNavController())
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

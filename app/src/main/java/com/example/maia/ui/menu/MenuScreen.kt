@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,6 +21,12 @@ import com.example.maia.navigation.Screen
 import com.example.maia.ui.components.MaiaBackground
 import com.example.maia.ui.components.MaiaText
 import com.example.maia.ui.components.MaiaTextSecondary
+
+@Preview(showBackground = true, name = "Menu Screen")
+@Composable
+fun MenuScreenPreview() {
+    MenuScreen(navController = androidx.navigation.compose.rememberNavController())
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
