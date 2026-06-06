@@ -17,6 +17,8 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,6 +53,11 @@ fun HomeScreen(navController: NavController) {
     )
 
     val marqueeText = "MAIA  ·  MAIA  ·  MAIA  ·  MAIA  ·  MAIA  ·  MAIA  ·  "
+
+    val configuration = LocalConfiguration.current
+    val density = LocalDensity.current
+    val screenWidthPx = with(density) { configuration.screenWidthDp.dp.toPx() }
+    val tx = offsetX * screenWidthPx
 
     Box(
         modifier = Modifier
@@ -100,15 +107,12 @@ fun HomeScreen(navController: NavController) {
         )
 
         // MAIA marquee
-        BoxWithConstraints(
+        Box(
             modifier = Modifier
                 .align(Alignment.Center)
                 .fillMaxWidth()
                 .clipToBounds()
         ) {
-            val screenWidth = constraints.maxWidth.toFloat()
-            val tx = offsetX * screenWidth
-
             Text(
                 text = marqueeText,
                 modifier = Modifier
