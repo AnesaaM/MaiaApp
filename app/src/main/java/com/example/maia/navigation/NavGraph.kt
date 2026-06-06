@@ -19,6 +19,7 @@ import com.example.maia.ui.auth.RegisterScreen
 import com.example.maia.ui.cart.CartScreen
 import com.example.maia.ui.components.BottomNavBar
 import com.example.maia.ui.home.HomeScreen
+import com.example.maia.ui.menu.MenuScreen
 import com.example.maia.ui.notifications.NotificationsScreen
 import com.example.maia.ui.orders.OrderHistoryScreen
 import com.example.maia.ui.wishlist.WishlistScreen
@@ -27,7 +28,7 @@ import com.example.maia.viewmodel.WishlistViewModel
 
 private val mainRoutes = setOf(
     Screen.Home.route, Screen.Cart.route, Screen.Account.route,
-    Screen.Wishlist.route, Screen.Orders.route
+    Screen.Wishlist.route, Screen.Orders.route, Screen.Menu.route
 )
 
 @Composable
@@ -97,6 +98,9 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             }
             composable(Screen.Notifications.route) {
                 NotificationsScreen(navController = navController)
+            }
+            composable(Screen.Menu.route) {
+                MenuScreen(navController = navController)
             }
         }
     }

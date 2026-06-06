@@ -6,16 +6,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -33,7 +35,6 @@ import com.example.maia.model.Product
 import com.example.maia.model.Section
 import com.example.maia.navigation.Screen
 import com.example.maia.ui.components.BlobHeader
-import com.example.maia.ui.components.MaiaAccent
 import com.example.maia.ui.components.MaiaBackground
 import com.example.maia.ui.components.MaiaText
 import com.example.maia.ui.components.MaiaTextSecondary
@@ -42,6 +43,8 @@ import com.example.maia.data.TokenManager
 import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.ProductViewModel
 import com.example.maia.viewmodel.WishlistViewModel
+
+private val tabs = listOf("WOMAN" to Section.WOMAN, "MAN" to Section.MAN, "KIDS" to Section.KIDS)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -54,19 +57,21 @@ fun HomeScreen(
     val productVm: ProductViewModel = viewModel()
     val context = LocalContext.current
 
-    val products = productVm.filteredProducts
-    val searchQuery = productVm.searchQuery.value
     val isLoading = productVm.isLoading.value
     val error = productVm.error.value
-    val currentSection = productVm.currentSection.value
 
     var showSearch by remember { mutableStateOf(false) }
+    var searchQuery by remember { mutableStateOf("") }
 
-    LaunchedEffect(Unit) {
-        wishlistViewModel.loadWishlist()
+    val pagerState = rememberPagerState(pageCount = { tabs.size })
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) { wishlistViewModel.loadWishlist() }
+
+    // Sync pager → ProductViewModel section
+    LaunchedEffect(pagerState.currentPage) {
+        productVm.switchSection(tabs[pagerState.currentPage].second)
     }
-
-    val tabs = listOf("WOMAN" to Section.WOMAN, "MAN" to Section.MAN, "KIDS" to Section.KIDS)
 
     Column(
         modifier = Modifier
@@ -76,19 +81,29 @@ fun HomeScreen(
         BlobHeader(
             actions = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = { showSearch = !showSearch }, modifier = Modifier.size(40.dp)) {
+                    IconButton(
+                        onClick = { showSearch = !showSearch },
+                        modifier = Modifier.size(40.dp)
+                    ) {
                         Icon(Icons.Default.Search, contentDescription = "Search", tint = MaiaText, modifier = Modifier.size(20.dp))
                     }
-                    IconButton(onClick = { navController.navigate(Screen.Account.route) }, modifier = Modifier.size(40.dp)) {
+                    IconButton(
+                        onClick = { navController.navigate(Screen.Account.route) },
+                        modifier = Modifier.size(40.dp)
+                    ) {
                         Icon(Icons.Default.Person, contentDescription = "Account", tint = MaiaText, modifier = Modifier.size(20.dp))
                     }
-                    IconButton(onClick = { navController.navigate(Screen.Notifications.route) }, modifier = Modifier.size(40.dp)) {
+                    IconButton(
+                        onClick = { navController.navigate(Screen.Notifications.route) },
+                        modifier = Modifier.size(40.dp)
+                    ) {
                         Icon(Icons.Default.Notifications, contentDescription = "Notifications", tint = MaiaText, modifier = Modifier.size(20.dp))
                     }
                 }
             }
         )
 
+        // Section tabs — klikueshme dhe sinkronizuar me pager
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -96,11 +111,14 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.spacedBy(24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            tabs.forEach { (label, section) ->
-                val selected = currentSection == section
+            tabs.forEachIndexed { index, (label, _) ->
+                val selected = pagerState.currentPage == index
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable { productVm.switchSection(section) }
+                    modifier = Modifier.clickable {
+                        productVm.switchSection(tabs[index].second)
+                        scope.launch { pagerState.animateScrollToPage(index) }
+                    }
                 ) {
                     Text(
                         label,
@@ -123,7 +141,10 @@ fun HomeScreen(
         if (showSearch) {
             OutlinedTextField(
                 value = searchQuery,
-                onValueChange = { productVm.updateSearch(it) },
+                onValueChange = {
+                    searchQuery = it
+                    productVm.updateSearch(it)
+                },
                 placeholder = {
                     Text(
                         "WHAT ARE YOU LOOKING FOR?",
@@ -146,36 +167,44 @@ fun HomeScreen(
             )
         }
 
-        when {
-            isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = MaiaText, strokeWidth = 1.5.dp)
-            }
-            error != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Failed to load products", color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
-                    Spacer(Modifier.height(8.dp))
-                    TextButton(onClick = { productVm.loadProducts() }) {
-                        Text("RETRY", letterSpacing = 1.sp, color = MaiaText, fontSize = 11.sp)
+        // HorizontalPager — swipe majtas/djathtas ndërmjet seksioneve
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            val sectionProducts = productVm.filteredProducts
+
+            when {
+                isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = MaiaText, strokeWidth = 1.5.dp)
+                }
+                error != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("Failed to load products", color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+                        Spacer(Modifier.height(8.dp))
+                        TextButton(onClick = { productVm.loadProducts() }) {
+                            Text("RETRY", letterSpacing = 1.sp, color = MaiaText, fontSize = 11.sp)
+                        }
                     }
                 }
-            }
-            else -> LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(products) { product ->
-                    FashionProductCard(
-                        product = product,
-                        isWishlisted = wishlistViewModel.isWishlisted(product.id),
-                        onAddToCart = {
-                            cartViewModel.addToCart(product.id) {
-                                NotificationHelper.showCartNotification(context, product.title)
-                            }
-                        },
-                        onToggleWishlist = { wishlistViewModel.toggleWishlist(product.id) }
-                    )
+                else -> LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(sectionProducts) { product ->
+                        FashionProductCard(
+                            product = product,
+                            isWishlisted = wishlistViewModel.isWishlisted(product.id),
+                            onAddToCart = {
+                                cartViewModel.addToCart(product.id) {
+                                    NotificationHelper.showCartNotification(context, product.title)
+                                }
+                            },
+                            onToggleWishlist = { wishlistViewModel.toggleWishlist(product.id) }
+                        )
+                    }
                 }
             }
         }
@@ -248,10 +277,10 @@ private fun FashionProductCard(
 @Preview(showBackground = true, name = "Home Screen")
 @Composable
 fun HomeScreenPreview() {
-    val context = LocalContext.current
+    val context = androidx.compose.ui.platform.LocalContext.current
     HomeScreen(
         navController = rememberNavController(),
-        tokenManager = com.example.maia.data.TokenManager(context),
+        tokenManager = TokenManager(context),
         cartViewModel = CartViewModel(),
         wishlistViewModel = WishlistViewModel()
     )
