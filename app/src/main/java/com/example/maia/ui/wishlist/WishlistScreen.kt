@@ -20,10 +20,20 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.maia.model.wishlist.WishlistItem
 import com.example.maia.util.NotificationHelper
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.WishlistViewModel
 
 private val Purple = Color(0xFF6C5CE7)
+
+@Preview(showBackground = true, name = "Wishlist Screen")
+@Composable
+fun WishlistScreenPreview() {
+    WishlistScreen(
+        wishlistViewModel = WishlistViewModel(),
+        cartViewModel = CartViewModel()
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -24,8 +24,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val tokenManager = TokenManager(applicationContext)
-        // Restore saved token into Retrofit interceptor on app start
-        tokenManager.getToken()?.let { RetrofitInstance.updateToken(it) }
 
         // Request notification permission on Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

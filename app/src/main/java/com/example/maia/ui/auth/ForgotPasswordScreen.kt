@@ -16,7 +16,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.maia.data.TokenManager
 import com.example.maia.ui.components.BlobHeader
 import com.example.maia.ui.components.MaiaBackground
@@ -26,6 +29,16 @@ import com.example.maia.ui.components.MaiaTextSecondary
 import com.example.maia.viewmodel.AuthState
 import com.example.maia.viewmodel.AuthViewModel
 import com.example.maia.viewmodel.AuthViewModelFactory
+
+@Preview(showBackground = true, name = "Forgot Password Screen")
+@Composable
+fun ForgotPasswordScreenPreview() {
+    val context = LocalContext.current
+    ForgotPasswordScreen(
+        navController = rememberNavController(),
+        tokenManager = com.example.maia.data.TokenManager(context)
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
