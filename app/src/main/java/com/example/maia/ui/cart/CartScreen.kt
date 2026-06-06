@@ -25,8 +25,18 @@ import com.example.maia.ui.components.MaiaButton
 import com.example.maia.ui.components.MaiaText
 import com.example.maia.ui.components.MaiaTextSecondary
 import com.example.maia.util.NotificationHelper
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.WishlistViewModel
+
+@Preview(showBackground = true, name = "Cart Screen")
+@Composable
+fun CartScreenPreview() {
+    CartScreen(
+        cartViewModel = CartViewModel(),
+        wishlistViewModel = WishlistViewModel()
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

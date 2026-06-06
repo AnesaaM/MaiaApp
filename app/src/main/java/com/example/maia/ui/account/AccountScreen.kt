@@ -17,7 +17,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.maia.data.TokenManager
 import com.example.maia.navigation.Screen
 import com.example.maia.ui.components.MaiaAccent
@@ -28,6 +31,16 @@ import com.example.maia.ui.components.MaiaTextSecondary
 import com.example.maia.viewmodel.AuthViewModel
 import com.example.maia.viewmodel.AuthViewModelFactory
 import com.example.maia.viewmodel.OrderViewModel
+
+@Preview(showBackground = true, name = "Account Screen")
+@Composable
+fun AccountScreenPreview() {
+    val context = LocalContext.current
+    AccountScreen(
+        navController = rememberNavController(),
+        tokenManager = com.example.maia.data.TokenManager(context)
+    )
+}
 
 @Composable
 fun AccountScreen(navController: NavController, tokenManager: TokenManager) {
@@ -89,7 +102,13 @@ fun AccountScreen(navController: NavController, tokenManager: TokenManager) {
         // Menu items
         val menuItems = listOf("PURCHASES", "FAVORITES", "CONTACT DATA", "STORES", "NOTIFICATIONS")
         menuItems.forEach { item ->
-            AccountMenuItem(label = item, onClick = { })
+            AccountMenuItem(label = item, onClick = {
+                when (item) {
+                    "PURCHASES" -> navController.navigate(Screen.Orders.route)
+                    "FAVORITES" -> navController.navigate(Screen.Wishlist.route)
+                    else -> {}
+                }
+            })
             HorizontalDivider(
                 modifier = Modifier.padding(horizontal = 24.dp),
                 color = Color(0xFFEDE8E3),

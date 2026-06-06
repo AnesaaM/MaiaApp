@@ -30,7 +30,7 @@ class CartViewModel : ViewModel() {
             isLoading.value = true
             error.value = null
             try {
-                cartItems.value = RetrofitInstance.cartApi.getCart()
+                cartItems.value = RetrofitInstance.orderServiceApi.getCart()
             } catch (e: Exception) {
                 error.value = e.message ?: "Failed to load cart"
             } finally {
@@ -42,7 +42,7 @@ class CartViewModel : ViewModel() {
     fun addToCart(productId: Int, onSuccess: () -> Unit = {}) {
         viewModelScope.launch {
             try {
-                RetrofitInstance.cartApi.addToCart(AddToCartRequest(productId))
+                RetrofitInstance.orderServiceApi.addToCart(AddToCartRequest(productId))
                 onSuccess()
                 loadCart()
             } catch (e: Exception) {
@@ -54,10 +54,21 @@ class CartViewModel : ViewModel() {
     fun removeFromCart(cartItemId: Int) {
         viewModelScope.launch {
             try {
-                RetrofitInstance.cartApi.removeFromCart(cartItemId)
+                RetrofitInstance.orderServiceApi.removeFromCart(cartItemId)
                 loadCart()
             } catch (e: Exception) {
                 error.value = e.message ?: "Failed to remove item"
+            }
+        }
+    }
+
+    fun clearCart() {
+        viewModelScope.launch {
+            try {
+                RetrofitInstance.orderServiceApi.clearCart()
+                cartItems.value = emptyList()
+            } catch (e: Exception) {
+                error.value = e.message ?: "Failed to clear cart"
             }
         }
     }
@@ -66,7 +77,7 @@ class CartViewModel : ViewModel() {
         viewModelScope.launch {
             isLoading.value = true
             try {
-                RetrofitInstance.orderApi.placeOrder()
+                RetrofitInstance.orderServiceApi.placeOrder()
                 cartItems.value = emptyList()
                 orderPlaced.value = true
             } catch (e: Exception) {

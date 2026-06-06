@@ -21,7 +21,7 @@ class OrderViewModel : ViewModel() {
             isLoading.value = true
             error.value = null
             try {
-                orders.value = RetrofitInstance.orderApi.getOrders()
+                orders.value = RetrofitInstance.orderServiceApi.getMyOrders()
             } catch (e: Exception) {
                 error.value = e.message ?: "Failed to load orders"
             } finally {

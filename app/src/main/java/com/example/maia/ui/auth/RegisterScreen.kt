@@ -15,7 +15,10 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.maia.data.TokenManager
 import com.example.maia.navigation.Screen
 import com.example.maia.ui.components.BlobHeader
@@ -26,6 +29,16 @@ import com.example.maia.ui.components.MaiaTextSecondary
 import com.example.maia.viewmodel.AuthState
 import com.example.maia.viewmodel.AuthViewModel
 import com.example.maia.viewmodel.AuthViewModelFactory
+
+@Preview(showBackground = true, name = "Register Screen")
+@Composable
+fun RegisterScreenPreview() {
+    val context = LocalContext.current
+    RegisterScreen(
+        navController = rememberNavController(),
+        tokenManager = com.example.maia.data.TokenManager(context)
+    )
+}
 
 @Composable
 fun RegisterScreen(navController: NavController, tokenManager: TokenManager) {
@@ -110,7 +123,7 @@ fun RegisterScreen(navController: NavController, tokenManager: TokenManager) {
                         else -> null
                     }
                     if (validationError == null) {
-                        vm.register("$firstName $lastName", email, password)
+                        vm.register(firstName, lastName, email, password)
                     }
                 },
                 modifier = Modifier.fillMaxWidth().height(48.dp),

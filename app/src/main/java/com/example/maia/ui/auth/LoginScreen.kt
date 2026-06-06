@@ -19,7 +19,10 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.maia.data.TokenManager
 import com.example.maia.navigation.Screen
 import com.example.maia.ui.components.MaiaBackground
@@ -164,6 +167,16 @@ fun LoginScreen(navController: NavController, tokenManager: TokenManager) {
             }
         }
     }
+}
+
+@Preview(showBackground = true, name = "Login Screen")
+@Composable
+fun LoginScreenPreview() {
+    val context = LocalContext.current
+    LoginScreen(
+        navController = rememberNavController(),
+        tokenManager = com.example.maia.data.TokenManager(context)
+    )
 }
 
 @Composable

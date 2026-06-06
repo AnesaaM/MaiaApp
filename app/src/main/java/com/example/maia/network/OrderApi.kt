@@ -5,9 +5,9 @@ import retrofit2.http.GET
 import retrofit2.http.POST
 
 interface OrderApi {
-    @GET("api/Orders")
+    @GET("gateway/women/Order")
     suspend fun getOrders(): List<Order>
 
-    @POST("api/Orders")
+    @POST("gateway/women/Order")
     suspend fun placeOrder(): Order
 }

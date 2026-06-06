@@ -32,9 +32,10 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
             loginState.value = AuthState.Loading
             try {
                 val response = RetrofitInstance.authApi.login(LoginRequest(email, password))
-                tokenManager.saveToken(response.token)
-                response.username?.let { tokenManager.saveUsername(it) }
-                RetrofitInstance.updateToken(response.token)
+                // Token vjen si cookie — OkHttp e ruan automatikisht
+                tokenManager.saveEmail(response.email)
+                tokenManager.saveUsername("${response.firstName} ${response.lastName}")
+                tokenManager.saveRole(response.role)
                 loginState.value = AuthState.Success
             } catch (e: Exception) {
                 loginState.value = AuthState.Error(e.message ?: "Login failed")
@@ -42,11 +43,11 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
         }
     }
 
-    fun register(username: String, email: String, password: String) {
+    fun register(firstName: String, lastName: String, email: String, password: String) {
         viewModelScope.launch {
             registerState.value = AuthState.Loading
             try {
-                RetrofitInstance.authApi.register(RegisterRequest(username, email, password))
+                RetrofitInstance.authApi.register(RegisterRequest(firstName, lastName, email, password))
                 registerState.value = AuthState.Success
             } catch (e: Exception) {
                 registerState.value = AuthState.Error(e.message ?: "Registration failed")
@@ -67,9 +68,12 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
     }
 
     fun logout() {
-        tokenManager.clearToken()
-        RetrofitInstance.updateToken(null)
-        loginState.value = AuthState.Idle
+        viewModelScope.launch {
+            try { RetrofitInstance.authApi.logout() } catch (_: Exception) { }
+            RetrofitInstance.clearSession()
+            tokenManager.clear()
+            loginState.value = AuthState.Idle
+        }
     }
 }
 
