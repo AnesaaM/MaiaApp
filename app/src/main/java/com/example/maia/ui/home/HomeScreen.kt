@@ -110,6 +110,7 @@ fun HomeScreen(navController: NavController) {
         Box(
             modifier = Modifier
                 .align(Alignment.Center)
+                .offset(y = 60.dp)
                 .fillMaxWidth()
                 .clipToBounds()
         ) {
