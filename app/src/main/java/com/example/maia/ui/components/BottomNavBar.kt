@@ -26,6 +26,7 @@ fun BottomNavBar(navController: NavController, currentRoute: String?, cartCount:
             modifier = Modifier
                 .fillMaxWidth()
                 .background(MaiaBackground)
+                .navigationBarsPadding()
                 .padding(vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically

@@ -9,12 +9,12 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface WishlistApi {
-    @GET("api/Wishlist")
+    @GET("gateway/women/Wishlist")
     suspend fun getWishlist(): List<WishlistItem>
 
-    @POST("api/Wishlist")
+    @POST("gateway/women/Wishlist")
     suspend fun addToWishlist(@Body request: AddToWishlistRequest): WishlistItem
 
-    @DELETE("api/Wishlist/{id}")
+    @DELETE("gateway/women/Wishlist/{id}")
     suspend fun removeFromWishlist(@Path("id") id: Int)
 }

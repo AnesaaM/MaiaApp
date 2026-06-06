@@ -55,8 +55,9 @@ dependencies {
     // Material Icons Extended (for cart, heart, receipt icons)
     implementation("androidx.compose.material:material-icons-extended:1.6.8")
 
-    // OkHttp for auth interceptor
+    // OkHttp for auth interceptor + logging
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

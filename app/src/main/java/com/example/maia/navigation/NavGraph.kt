@@ -1,5 +1,6 @@
 package com.example.maia.navigation
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
@@ -19,6 +20,7 @@ import com.example.maia.ui.cart.CartScreen
 import com.example.maia.ui.components.BottomNavBar
 import com.example.maia.ui.home.HomeScreen
 import com.example.maia.ui.orders.OrderHistoryScreen
+import com.example.maia.ui.wishlist.WishlistScreen
 import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.WishlistViewModel
 
@@ -38,6 +40,7 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
     val startDestination = if (tokenManager.isLoggedIn()) Screen.Home.route else Screen.Login.route
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0),
         bottomBar = {
             if (currentRoute in mainRoutes) {
                 BottomNavBar(
@@ -84,6 +87,12 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             }
             composable(Screen.Orders.route) {
                 OrderHistoryScreen()
+            }
+            composable(Screen.Wishlist.route) {
+                WishlistScreen(
+                    wishlistViewModel = wishlistViewModel,
+                    cartViewModel = cartViewModel
+                )
             }
         }
     }

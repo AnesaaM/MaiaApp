@@ -1,7 +1,9 @@
 package com.example.maia.model.auth
 
 data class AuthResponse(
-    val token: String,
-    val username: String? = null,
-    val userId: Int? = null
+    val isLoggedIn: Boolean = false,
+    val role: String = "",
+    val email: String = "",
+    val firstName: String = "",
+    val lastName: String = ""
 )

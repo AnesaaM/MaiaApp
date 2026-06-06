@@ -9,12 +9,12 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface CartApi {
-    @GET("api/Cart")
+    @GET("gateway/women/Cart")
     suspend fun getCart(): List<CartItem>
 
-    @POST("api/Cart")
+    @POST("gateway/women/Cart")
     suspend fun addToCart(@Body request: AddToCartRequest): CartItem
 
-    @DELETE("api/Cart/{id}")
+    @DELETE("gateway/women/Cart/{id}")
     suspend fun removeFromCart(@Path("id") id: Int)
 }

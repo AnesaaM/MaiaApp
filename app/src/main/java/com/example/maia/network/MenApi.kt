@@ -1,6 +1,6 @@
 package com.example.maia.network
 
-import com.example.maia.model.KidsCards
+import com.example.maia.model.MenCard
 import com.example.maia.model.cart.AddToCartRequest
 import com.example.maia.model.cart.CartItem
 import com.example.maia.model.order.Order
@@ -11,25 +11,25 @@ import retrofit2.http.POST
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-interface KidsApi {
-    @GET("gateway/kids/KidsCards")
-    suspend fun getKidsCards(): List<KidsCards>
+interface MenApi {
+    @GET("gateway/men/MenCards")
+    suspend fun getMenCards(): List<MenCard>
 
-    @GET("gateway/kids/KidsCards/search")
-    suspend fun searchKidsCards(@Query("query") query: String): List<KidsCards>
+    @GET("gateway/men/MenCards/search")
+    suspend fun searchMenCards(@Query("query") query: String): List<MenCard>
 
-    @GET("gateway/kids/Cart")
+    @GET("gateway/men/Cart")
     suspend fun getCart(): List<CartItem>
 
-    @POST("gateway/kids/Cart")
+    @POST("gateway/men/Cart")
     suspend fun addToCart(@Body request: AddToCartRequest): CartItem
 
-    @DELETE("gateway/kids/Cart/{id}")
+    @DELETE("gateway/men/Cart/{id}")
     suspend fun removeFromCart(@Path("id") id: Int)
 
-    @GET("gateway/kids/Order")
+    @GET("gateway/men/Order")
     suspend fun getOrders(): List<Order>
 
-    @POST("gateway/kids/Order")
+    @POST("gateway/men/Order")
     suspend fun placeOrder(): Order
 }

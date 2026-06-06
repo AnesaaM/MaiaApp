@@ -1,6 +1,7 @@
 package com.example.maia.ui.home
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -18,12 +19,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil.compose.AsyncImage
-import com.example.maia.model.KidsCards
+import com.example.maia.model.Product
+import com.example.maia.model.Section
 import com.example.maia.navigation.Screen
 import com.example.maia.ui.components.BlobHeader
 import com.example.maia.ui.components.MaiaAccent
@@ -32,8 +36,6 @@ import com.example.maia.ui.components.MaiaText
 import com.example.maia.ui.components.MaiaTextSecondary
 import com.example.maia.util.NotificationHelper
 import com.example.maia.data.TokenManager
-import com.example.maia.viewmodel.AuthViewModel
-import com.example.maia.viewmodel.AuthViewModelFactory
 import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.ProductViewModel
 import com.example.maia.viewmodel.WishlistViewModel
@@ -53,6 +55,7 @@ fun HomeScreen(
     val searchQuery = productVm.searchQuery.value
     val isLoading = productVm.isLoading.value
     val error = productVm.error.value
+    val currentSection = productVm.currentSection.value
 
     var showSearch by remember { mutableStateOf(false) }
 
@@ -60,15 +63,15 @@ fun HomeScreen(
         wishlistViewModel.loadWishlist()
     }
 
+    val tabs = listOf("WOMAN" to Section.WOMAN, "MAN" to Section.MAN, "KIDS" to Section.KIDS)
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaiaBackground)
     ) {
-        // Header blob + MAIA logo
-        BlobHeader(height = 190.dp)
+        BlobHeader()
 
-        // Category tabs row
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -76,16 +79,20 @@ fun HomeScreen(
             horizontalArrangement = Arrangement.spacedBy(24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            listOf("WOMAN", "MAN", "KIDS").forEachIndexed { index, label ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            tabs.forEach { (label, section) ->
+                val selected = currentSection == section
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.clickable { productVm.switchSection(section) }
+                ) {
                     Text(
                         label,
                         fontSize = 12.sp,
                         letterSpacing = 1.5.sp,
-                        fontWeight = if (index == 2) FontWeight.Bold else FontWeight.Normal,
-                        color = MaiaText
+                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (selected) MaiaText else MaiaTextSecondary
                     )
-                    if (index == 2) {
+                    if (selected) {
                         Box(
                             modifier = Modifier
                                 .size(4.dp)
@@ -103,12 +110,18 @@ fun HomeScreen(
             }
         }
 
-        // Search bar (shown when search icon tapped)
         if (showSearch) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { productVm.updateSearch(it) },
-                placeholder = { Text("WHAT ARE YOU LOOKING FOR?", fontSize = 11.sp, letterSpacing = 1.sp, color = MaiaTextSecondary) },
+                placeholder = {
+                    Text(
+                        "WHAT ARE YOU LOOKING FOR?",
+                        fontSize = 11.sp,
+                        letterSpacing = 1.sp,
+                        color = MaiaTextSecondary
+                    )
+                },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp, vertical = 4.dp),
@@ -136,25 +149,23 @@ fun HomeScreen(
                     }
                 }
             }
-            else -> {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(2),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(products) { card ->
-                        FashionProductCard(
-                            card = card,
-                            isWishlisted = wishlistViewModel.isWishlisted(card.id),
-                            onAddToCart = {
-                                cartViewModel.addToCart(card.id) {
-                                    NotificationHelper.showCartNotification(context, card.title)
-                                }
-                            },
-                            onToggleWishlist = { wishlistViewModel.toggleWishlist(card.id) }
-                        )
-                    }
+            else -> LazyVerticalGrid(
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(products) { product ->
+                    FashionProductCard(
+                        product = product,
+                        isWishlisted = wishlistViewModel.isWishlisted(product.id),
+                        onAddToCart = {
+                            cartViewModel.addToCart(product.id) {
+                                NotificationHelper.showCartNotification(context, product.title)
+                            }
+                        },
+                        onToggleWishlist = { wishlistViewModel.toggleWishlist(product.id) }
+                    )
                 }
             }
         }
@@ -163,7 +174,7 @@ fun HomeScreen(
 
 @Composable
 private fun FashionProductCard(
-    card: KidsCards,
+    product: Product,
     isWishlisted: Boolean,
     onAddToCart: () -> Unit,
     onToggleWishlist: () -> Unit
@@ -171,8 +182,8 @@ private fun FashionProductCard(
     Column {
         Box {
             AsyncImage(
-                model = card.imageUrl,
-                contentDescription = card.title,
+                model = product.imageUrl,
+                contentDescription = product.title,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(200.dp)
@@ -196,7 +207,7 @@ private fun FashionProductCard(
         }
         Spacer(Modifier.height(6.dp))
         Text(
-            card.title,
+            product.title,
             fontSize = 11.sp,
             letterSpacing = 0.5.sp,
             color = MaiaText,
@@ -209,7 +220,7 @@ private fun FashionProductCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                "${String.format("%.0f", card.price)} EUR",
+                "${String.format("%.0f", product.price)} EUR",
                 fontSize = 11.sp,
                 color = MaiaTextSecondary
             )
@@ -222,4 +233,16 @@ private fun FashionProductCard(
             }
         }
     }
+}
+
+@Preview(showBackground = true, name = "Home Screen")
+@Composable
+fun HomeScreenPreview() {
+    val context = LocalContext.current
+    HomeScreen(
+        navController = rememberNavController(),
+        tokenManager = com.example.maia.data.TokenManager(context),
+        cartViewModel = CartViewModel(),
+        wishlistViewModel = WishlistViewModel()
+    )
 }

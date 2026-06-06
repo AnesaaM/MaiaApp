@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -31,7 +32,7 @@ val MaiaAccent = Color(0xFFB5381A)
 @Composable
 fun BlobHeader(
     modifier: Modifier = Modifier,
-    height: Dp = 190.dp
+    height: Dp = 220.dp
 ) {
     Box(
         modifier = modifier
@@ -44,10 +45,10 @@ fun BlobHeader(
             text = "MAIA",
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .padding(start = 28.dp, top = 32.dp),
+                .statusBarsPadding()
+                .padding(start = 28.dp, top = 16.dp),
             fontSize = 58.sp,
             fontFamily = FontFamily.Serif,
-            fontWeight = FontWeight.Bold,
             color = MaiaText,
             letterSpacing = 6.sp
         )
