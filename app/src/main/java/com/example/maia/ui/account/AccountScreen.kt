@@ -3,24 +3,25 @@ package com.example.maia.ui.account
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil.compose.AsyncImage
 import com.example.maia.data.TokenManager
 import com.example.maia.navigation.Screen
 import com.example.maia.ui.components.MaiaAccent
@@ -30,7 +31,7 @@ import com.example.maia.ui.components.MaiaText
 import com.example.maia.ui.components.MaiaTextSecondary
 import com.example.maia.viewmodel.AuthViewModel
 import com.example.maia.viewmodel.AuthViewModelFactory
-import com.example.maia.viewmodel.OrderViewModel
+import com.example.maia.viewmodel.ProductViewModel
 
 @Preview(showBackground = true, name = "Account Screen")
 @Composable
@@ -38,169 +39,163 @@ fun AccountScreenPreview() {
     val context = LocalContext.current
     AccountScreen(
         navController = rememberNavController(),
-        tokenManager = com.example.maia.data.TokenManager(context)
+        tokenManager = TokenManager(context)
     )
 }
 
 @Composable
 fun AccountScreen(navController: NavController, tokenManager: TokenManager) {
     val authVm: AuthViewModel = viewModel(factory = AuthViewModelFactory(tokenManager))
-    val orderVm: OrderViewModel = viewModel()
-    val orders = orderVm.orders.value
+    val productVm: ProductViewModel = viewModel()
+    val blobColor = MaiaBlob
 
-    LaunchedEffect(Unit) { orderVm.loadOrders() }
+    val username = tokenManager.getUsername() ?: "guest"
+    val products = productVm.allProducts.value.take(2)
 
-    val username = tokenManager.getUsername() ?: "Guest"
+    val menuItems = listOf(
+        "PURCHASES" to Screen.Orders.route,
+        "CONTACT DATA" to null,
+        "STORES" to null,
+        "NOTIFICATIONS" to Screen.Notifications.route
+    )
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(MaiaBackground)
-            .verticalScroll(rememberScrollState())
     ) {
-        // Header
-        Row(
+        // Header blob
+        Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
+                .height(120.dp)
+                .drawBehind {
+                    val w = size.width; val h = size.height
+                    val path = Path().apply {
+                        moveTo(0f, 0f); lineTo(w, 0f)
+                        lineTo(w, h * 0.68f)
+                        cubicTo(w * 0.82f, h * 1.05f, w * 0.60f, h * 0.72f, w * 0.44f, h * 0.90f)
+                        cubicTo(w * 0.28f, h * 1.08f, w * 0.12f, h * 0.78f, 0f, h * 0.85f)
+                        close()
+                    }
+                    drawPath(path, blobColor)
+                }
         ) {
-            Text(
-                "MAIA QR",
-                fontSize = 11.sp,
-                letterSpacing = 2.sp,
-                color = MaiaText,
-                fontWeight = FontWeight.Medium
-            )
-            Text(
-                "SETTINGS",
-                fontSize = 11.sp,
-                letterSpacing = 2.sp,
-                color = MaiaTextSecondary,
-                fontWeight = FontWeight.Medium
-            )
-        }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // MAIA QR left
+                Text(
+                    "MAIA QR  ⊞",
+                    fontSize = 11.sp,
+                    letterSpacing = 1.sp,
+                    color = MaiaText,
+                    fontWeight = FontWeight.Medium
+                )
 
-        HorizontalDivider(color = Color(0xFFE8DDD8), thickness = 0.5.dp)
+                Spacer(Modifier.weight(1f))
 
-        Spacer(Modifier.height(24.dp))
+                // MAIA center
+                Text(
+                    "MAIA",
+                    fontSize = 20.sp,
+                    fontFamily = FontFamily.Serif,
+                    fontStyle = FontStyle.Italic,
+                    fontWeight = FontWeight.Medium,
+                    color = MaiaText,
+                    letterSpacing = 2.sp
+                )
 
-        // User greeting
-        Text(
-            username.uppercase(),
-            modifier = Modifier.padding(horizontal = 24.dp),
-            fontSize = 22.sp,
-            fontFamily = FontFamily.Serif,
-            fontWeight = FontWeight.Bold,
-            color = MaiaText,
-            letterSpacing = 3.sp
-        )
+                Spacer(Modifier.weight(1f))
 
-        Spacer(Modifier.height(32.dp))
-
-        // Menu items
-        val menuItems = listOf("PURCHASES", "FAVORITES", "CONTACT DATA", "STORES", "NOTIFICATIONS")
-        menuItems.forEach { item ->
-            AccountMenuItem(label = item, onClick = {
-                when (item) {
-                    "PURCHASES" -> navController.navigate(Screen.Orders.route)
-                    "FAVORITES" -> navController.navigate(Screen.Wishlist.route)
-                    else -> {}
-                }
-            })
-            HorizontalDivider(
-                modifier = Modifier.padding(horizontal = 24.dp),
-                color = Color(0xFFEDE8E3),
-                thickness = 0.5.dp
-            )
-        }
-
-        // SPECIAL PRICES
-        Spacer(Modifier.height(8.dp))
-        Text(
-            "SPECIAL PRICES",
-            modifier = Modifier
-                .padding(horizontal = 24.dp, vertical = 12.dp)
-                .clickable { },
-            fontSize = 11.sp,
-            letterSpacing = 2.sp,
-            color = MaiaAccent,
-            fontWeight = FontWeight.Medium
-        )
-
-        HorizontalDivider(color = Color(0xFFE8DDD8), thickness = 0.5.dp)
-
-        // Orders section
-        if (orders.isNotEmpty()) {
-            Spacer(Modifier.height(24.dp))
-            Text(
-                "RECENT ORDERS",
-                modifier = Modifier.padding(horizontal = 24.dp),
-                fontSize = 11.sp,
-                letterSpacing = 2.sp,
-                color = MaiaTextSecondary
-            )
-            Spacer(Modifier.height(12.dp))
-            orders.take(3).forEach { order ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp, vertical = 8.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text("Order #${order.id}", fontSize = 12.sp, color = MaiaText)
-                    Text(order.status, fontSize = 12.sp, color = MaiaTextSecondary)
-                    Text("${String.format("%.0f", order.totalAmount)} EUR", fontSize = 12.sp, color = MaiaText)
-                }
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = 24.dp),
-                    color = Color(0xFFEDE8E3),
-                    thickness = 0.5.dp
+                // Username right
+                Text(
+                    username.lowercase(),
+                    fontSize = 11.sp,
+                    letterSpacing = 1.sp,
+                    color = MaiaText
                 )
             }
         }
 
-        Spacer(Modifier.height(32.dp))
-
-        // Logout
-        TextButton(
-            onClick = {
-                authVm.logout()
-                navController.navigate(Screen.Login.route) {
-                    popUpTo(0) { inclusive = true }
-                }
-            },
-            modifier = Modifier.padding(horizontal = 16.dp)
+        // Content: menu left + images right
+        Row(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(top = 24.dp)
         ) {
-            Text("LOG OUT", fontSize = 11.sp, letterSpacing = 2.sp, color = MaiaTextSecondary)
+            // Left: menu items
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                menuItems.forEach { (label, route) ->
+                    Text(
+                        text = label,
+                        fontSize = 22.sp,
+                        fontFamily = FontFamily.Serif,
+                        fontWeight = FontWeight.Light,
+                        color = MaiaText,
+                        letterSpacing = 1.sp,
+                        modifier = Modifier.clickable {
+                            route?.let { navController.navigate(it) }
+                        }
+                    )
+                }
+
+                // LOG OUT in red
+                Text(
+                    text = "LOG OUT",
+                    fontSize = 22.sp,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.Light,
+                    color = MaiaAccent,
+                    letterSpacing = 1.sp,
+                    modifier = Modifier.clickable {
+                        authVm.logout()
+                        navController.navigate(Screen.Login.route) {
+                            popUpTo(0) { inclusive = true }
+                        }
+                    }
+                )
+            }
+
+            // Right: two editorial photos
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                val imageModifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight(0.65f)
+                    .background(Color(0xFFEDE8E3))
+
+                if (products.size >= 2) {
+                    AsyncImage(
+                        model = products[0].imageUrl,
+                        contentDescription = null,
+                        modifier = imageModifier,
+                        contentScale = ContentScale.Crop
+                    )
+                    AsyncImage(
+                        model = products[1].imageUrl,
+                        contentDescription = null,
+                        modifier = imageModifier,
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
+                    Box(modifier = imageModifier)
+                    Box(modifier = imageModifier)
+                }
+            }
         }
-
-        Spacer(Modifier.height(24.dp))
-    }
-}
-
-@Composable
-private fun AccountMenuItem(label: String, onClick: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 24.dp, vertical = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            label,
-            fontSize = 12.sp,
-            letterSpacing = 1.5.sp,
-            color = MaiaText
-        )
-        Icon(
-            Icons.Default.ChevronRight,
-            contentDescription = null,
-            tint = MaiaTextSecondary,
-            modifier = Modifier.size(16.dp)
-        )
     }
 }
