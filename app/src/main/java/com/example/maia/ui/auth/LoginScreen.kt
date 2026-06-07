@@ -29,6 +29,7 @@ import com.example.maia.ui.components.MaiaBackground
 import com.example.maia.ui.components.MaiaBlob
 import com.example.maia.ui.components.MaiaButton
 import com.example.maia.ui.components.MaiaText
+import com.example.maia.ui.components.MaiaTextField
 import com.example.maia.ui.components.MaiaTextSecondary
 import com.example.maia.ui.components.BlobHeader
 import com.example.maia.viewmodel.AuthState
@@ -179,41 +180,3 @@ fun LoginScreenPreview() {
     )
 }
 
-@Composable
-fun MaiaTextField(
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit,
-    keyboardType: KeyboardType = KeyboardType.Text,
-    visualTransformation: VisualTransformation = VisualTransformation.None,
-    trailingIcon: @Composable (() -> Unit)? = null
-) {
-    Column {
-        Text(
-            label,
-            fontSize = 11.sp,
-            letterSpacing = 1.5.sp,
-            color = MaiaTextSecondary,
-            fontWeight = FontWeight.Medium
-        )
-        Spacer(Modifier.height(6.dp))
-        OutlinedTextField(
-            value = value,
-            onValueChange = onValueChange,
-            placeholder = { Text("Value", color = Color(0xFFBBABA4), fontSize = 14.sp) },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true,
-            visualTransformation = visualTransformation,
-            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            trailingIcon = trailingIcon,
-            shape = RoundedCornerShape(4.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                unfocusedBorderColor = Color(0xFFDDD0CA),
-                focusedBorderColor = MaiaText,
-                unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White
-            ),
-            textStyle = LocalTextStyle.current.copy(fontSize = 14.sp, color = MaiaText)
-        )
-    }
-}
