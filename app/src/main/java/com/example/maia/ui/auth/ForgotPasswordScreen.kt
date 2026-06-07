@@ -25,6 +25,7 @@ import com.example.maia.ui.components.BlobHeader
 import com.example.maia.ui.components.MaiaBackground
 import com.example.maia.ui.components.MaiaButton
 import com.example.maia.ui.components.MaiaText
+import com.example.maia.ui.components.MaiaTextField
 import com.example.maia.ui.components.MaiaTextSecondary
 import com.example.maia.viewmodel.AuthState
 import com.example.maia.viewmodel.AuthViewModel
