@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -12,7 +13,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.example.maia.data.TokenManager
+import com.example.maia.network.RetrofitInstance
 import com.example.maia.ui.account.AccountScreen
+import com.example.maia.ui.dashboard.AdminDashboardScreen
+import com.example.maia.ui.dashboard.MenManagerDashboardScreen
+import com.example.maia.ui.dashboard.SalesManagerDashboardScreen
+import com.example.maia.ui.dashboard.KidsManagerDashboardScreen
+import com.example.maia.ui.dashboard.WomenManagerDashboardScreen
 import com.example.maia.ui.auth.ForgotPasswordScreen
 import com.example.maia.ui.auth.LoginScreen
 import com.example.maia.ui.auth.RegisterScreen
@@ -38,6 +45,11 @@ private val mainRoutes = setOf(
 
 @Composable
 fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
+    // Restore persisted JWT so protected API calls work after a cold start
+    LaunchedEffect(Unit) {
+        tokenManager.getToken()?.let { RetrofitInstance.setToken(it) }
+    }
+
     val cartViewModel: CartViewModel = viewModel()
     val wishlistViewModel: WishlistViewModel = viewModel()
 
@@ -140,6 +152,21 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             }
             composable(Screen.Menu.route) {
                 MenuScreen(navController = navController)
+            }
+            composable(Screen.AdminDashboard.route) {
+                AdminDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.SalesManagerDashboard.route) {
+                SalesManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.WomenManagerDashboard.route) {
+                WomenManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.MenManagerDashboard.route) {
+                MenManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.KidsManagerDashboard.route) {
+                KidsManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
             }
             composable(Screen.Search.route) {
                 SearchScreen(

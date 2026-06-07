@@ -34,7 +34,12 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
             loginState.value = AuthState.Loading
             try {
                 val response = RetrofitInstance.authApi.login(LoginRequest(email, password))
-                // Token vjen si cookie — OkHttp e ruan automatikisht
+                // If backend returns JWT in response body, store and use as Bearer header
+                val jwt = response.token ?: response.accessToken
+                if (jwt != null) {
+                    RetrofitInstance.setToken(jwt)
+                    tokenManager.saveToken(jwt)
+                }
                 tokenManager.saveEmail(response.email)
                 tokenManager.saveUsername("${response.firstName} ${response.lastName}")
                 tokenManager.saveRole(response.role)

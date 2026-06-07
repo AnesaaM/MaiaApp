@@ -47,7 +47,15 @@ fun LoginScreen(navController: NavController, tokenManager: TokenManager) {
 
     LaunchedEffect(state) {
         if (state is AuthState.Success) {
-            navController.navigate(Screen.Home.route) {
+            val destination = when (tokenManager.getRole()) {
+                "Admin"          -> Screen.AdminDashboard.route
+                "SalesManager"   -> Screen.SalesManagerDashboard.route
+                "WomenManager"   -> Screen.WomenManagerDashboard.route
+                "MenManager"     -> Screen.MenManagerDashboard.route
+                "KidsManager"    -> Screen.KidsManagerDashboard.route
+                else             -> Screen.Home.route
+            }
+            navController.navigate(destination) {
                 popUpTo(Screen.Login.route) { inclusive = true }
             }
         }
