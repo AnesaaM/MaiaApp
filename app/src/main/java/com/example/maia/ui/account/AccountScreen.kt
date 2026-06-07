@@ -55,7 +55,7 @@ fun AccountScreen(navController: NavController, tokenManager: TokenManager) {
     val menuItems = listOf(
         "PURCHASES" to Screen.Orders.route,
         "CONTACT DATA" to null,
-        "STORES" to null,
+        "STORES" to Screen.Stores.route,
         "NOTIFICATIONS" to Screen.Notifications.route
     )
 
