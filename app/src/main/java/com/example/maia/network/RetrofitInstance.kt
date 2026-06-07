@@ -26,12 +26,26 @@ object RetrofitInstance {
         fun clear() = store.clear()
     }
 
+    // Bearer token — set after login if backend returns JWT in response body
+    @Volatile private var bearerToken: String? = null
+    fun setToken(token: String?) { bearerToken = token }
+
     private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
     private val client = OkHttpClient.Builder()
         .cookieJar(cookieJar)
+        .addInterceptor { chain ->
+            val token = bearerToken
+            val request = if (token != null)
+                chain.request().newBuilder()
+                    .addHeader("Authorization", "Bearer $token")
+                    .build()
+            else
+                chain.request()
+            chain.proceed(request)
+        }
         .addInterceptor(logging)
         .build()
 
@@ -43,7 +57,7 @@ object RetrofitInstance {
             .build()
     }
 
-    fun clearSession() = cookieJar.clear()
+    fun clearSession() { cookieJar.clear(); bearerToken = null }
 
     // Auth
     val authApi: AuthApi by lazy { retrofit.create(AuthApi::class.java) }
@@ -60,6 +74,11 @@ object RetrofitInstance {
     val notificationApi: NotificationApi by lazy { retrofit.create(NotificationApi::class.java) }
     val fileUploadApi: FileUploadApi by lazy { retrofit.create(FileUploadApi::class.java) }
     val settingsApi: SettingsApi by lazy { retrofit.create(SettingsApi::class.java) }
+
+    // Dashboard APIs
+    val adminApi: AdminApi by lazy { retrofit.create(AdminApi::class.java) }
+    val womenManagerApi: WomenManagerApi by lazy { retrofit.create(WomenManagerApi::class.java) }
+    val menManagerApi: MenManagerApi by lazy { retrofit.create(MenManagerApi::class.java) }
 
     // Aliases për ViewModels ekzistues
     val cartApi: CartApi by lazy { retrofit.create(CartApi::class.java) }
