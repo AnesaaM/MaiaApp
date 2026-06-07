@@ -26,6 +26,8 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
         private set
     var forgotPasswordState = mutableStateOf<AuthState>(AuthState.Idle)
         private set
+    var resendState = mutableStateOf<AuthState>(AuthState.Idle)
+        private set
 
     fun login(email: String, password: String) {
         viewModelScope.launch {
@@ -51,6 +53,18 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
                 registerState.value = AuthState.Success
             } catch (e: Exception) {
                 registerState.value = AuthState.Error(e.message ?: "Registration failed")
+            }
+        }
+    }
+
+    fun resendVerification(email: String) {
+        viewModelScope.launch {
+            resendState.value = AuthState.Loading
+            try {
+                RetrofitInstance.authApi.forgotPassword(ForgotPasswordRequest(email))
+                resendState.value = AuthState.Success
+            } catch (e: Exception) {
+                resendState.value = AuthState.Error(e.message ?: "Resend failed")
             }
         }
     }

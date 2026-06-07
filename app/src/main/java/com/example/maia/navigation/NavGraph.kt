@@ -16,6 +16,7 @@ import com.example.maia.ui.account.AccountScreen
 import com.example.maia.ui.auth.ForgotPasswordScreen
 import com.example.maia.ui.auth.LoginScreen
 import com.example.maia.ui.auth.RegisterScreen
+import com.example.maia.ui.auth.VerificationScreen
 import com.example.maia.ui.cart.CartScreen
 import com.example.maia.ui.components.BottomNavBar
 import com.example.maia.ui.home.HomeScreen
@@ -69,6 +70,15 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             }
             composable(Screen.ForgotPassword.route) {
                 ForgotPasswordScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.VerifyEmail.route) { backStackEntry ->
+                val raw = backStackEntry.arguments?.getString("email") ?: ""
+                val email = java.net.URLDecoder.decode(raw, "UTF-8")
+                VerificationScreen(
+                    navController = navController,
+                    email = email,
+                    tokenManager = tokenManager
+                )
             }
             composable(Screen.Home.route) {
                 HomeScreen(navController = navController)

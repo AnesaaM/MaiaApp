@@ -21,6 +21,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.maia.data.TokenManager
 import com.example.maia.navigation.Screen
+import com.example.maia.navigation.Screen.VerifyEmail
 import com.example.maia.ui.components.BlobHeader
 import com.example.maia.ui.components.MaiaBackground
 import com.example.maia.ui.components.MaiaButton
@@ -54,7 +55,7 @@ fun RegisterScreen(navController: NavController, tokenManager: TokenManager) {
 
     LaunchedEffect(state) {
         if (state is AuthState.Success) {
-            navController.navigate(Screen.Login.route) {
+            navController.navigate(VerifyEmail.createRoute(email)) {
                 popUpTo(Screen.Register.route) { inclusive = true }
             }
         }
