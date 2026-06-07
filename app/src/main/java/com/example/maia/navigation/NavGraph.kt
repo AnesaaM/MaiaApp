@@ -25,6 +25,7 @@ import com.example.maia.ui.notifications.NotificationsScreen
 import com.example.maia.ui.search.SearchScreen
 import com.example.maia.ui.orders.OrderHistoryScreen
 import com.example.maia.ui.shop.ShopScreen
+import com.example.maia.ui.stores.StoresScreen
 import com.example.maia.ui.wishlist.WishlistScreen
 import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.WishlistViewModel
@@ -146,6 +147,9 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
                     cartViewModel = cartViewModel,
                     wishlistViewModel = wishlistViewModel
                 )
+            }
+            composable(Screen.Stores.route) {
+                StoresScreen(navController = navController)
             }
         }
     }
