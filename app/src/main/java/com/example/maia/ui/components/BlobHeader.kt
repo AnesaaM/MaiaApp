@@ -40,6 +40,7 @@ fun BlobHeaderPreview() {
 fun BlobHeader(
     modifier: Modifier = Modifier,
     height: Dp = 220.dp,
+    leading: @Composable (() -> Unit)? = null,
     actions: @Composable (() -> Unit)? = null
 ) {
     Box(
@@ -60,6 +61,16 @@ fun BlobHeader(
             color = MaiaText,
             letterSpacing = 6.sp
         )
+        if (leading != null) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopStart)
+                    .statusBarsPadding()
+                    .padding(start = 8.dp, top = 4.dp)
+            ) {
+                leading()
+            }
+        }
         if (actions != null) {
             Box(
                 modifier = Modifier
