@@ -6,5 +6,8 @@ data class WomenCard(
     val imageUrl: String,
     val price: Double,
     val description: String = "",
-    val category: String = ""
+    val category: String = "",
+    val color: String = "",
+    val womanCategoryId: Int = 0,
+    val discountPercent: Int? = null
 )

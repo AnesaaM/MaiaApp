@@ -42,6 +42,19 @@ private val kidsCategories = listOf(
     "VIEW ALL", "T-SHIRTS", "DRESSES", "TOPS", "JEANS", "SHORTS"
 )
 
+// categoryId = 0 → VIEW ALL (no filter)
+private val womanCategoryIds = mapOf(
+    "VIEW ALL" to 0, "TOPS" to 1, "DRESSES" to 2, "BOTTOMS" to 3,
+    "OUTERWEAR" to 4, "SWIMWEAR" to 5, "MATCHING SETS" to 6,
+    "FOOTWEAR" to 7, "ACCESSORIES" to 8
+)
+private val manCategoryIds = mapOf(
+    "VIEW ALL" to 0, "TOPS" to 1, "BOTTOMS" to 2, "SUITS & FORMALWEAR" to 3,
+    "OUTERWEAR" to 4, "SWIMWEAR" to 5, "FOOTWEAR" to 6, "ACCESSORIES" to 7
+)
+// SALE: womanCategoryId=9, menCategoryId=8, kids=0
+private val saleCategoryIds = listOf(9, 8, 0)
+
 private val tabs = listOf("WOMAN", "MAN", "KIDS")
 
 @Preview(showBackground = true, name = "Menu Screen")
@@ -60,6 +73,11 @@ fun MenuScreen(navController: NavController) {
         0 -> womanCategories
         1 -> manCategories
         else -> kidsCategories
+    }
+    val categoryIdMap = when (selectedTab) {
+        0 -> womanCategoryIds
+        1 -> manCategoryIds
+        else -> emptyMap()
     }
 
     Column(
@@ -170,13 +188,16 @@ fun MenuScreen(navController: NavController) {
 
             Column(verticalArrangement = Arrangement.spacedBy(18.dp)) {
                 categories.forEach { category ->
+                    val catId = categoryIdMap[category] ?: 0
                     Text(
                         text = category,
                         fontSize = 14.sp,
                         letterSpacing = 2.sp,
                         color = MaiaText,
                         fontWeight = FontWeight.Normal,
-                        modifier = Modifier.clickable { }
+                        modifier = Modifier.clickable {
+                            navController.navigate("shop/$selectedTab/$catId")
+                        }
                     )
                 }
                 // SALE in green
@@ -186,7 +207,9 @@ fun MenuScreen(navController: NavController) {
                     letterSpacing = 2.sp,
                     color = Color(0xFF2E7D32),
                     fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { }
+                    modifier = Modifier.clickable {
+                        navController.navigate("shop/$selectedTab/${saleCategoryIds[selectedTab]}")
+                    }
                 )
             }
         }

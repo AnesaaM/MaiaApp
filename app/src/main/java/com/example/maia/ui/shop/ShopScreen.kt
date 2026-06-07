@@ -10,6 +10,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Notifications
@@ -24,6 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -62,7 +64,9 @@ fun ShopScreen(
     navController: NavController,
     tokenManager: TokenManager,
     cartViewModel: CartViewModel,
-    wishlistViewModel: WishlistViewModel
+    wishlistViewModel: WishlistViewModel,
+    initialSection: Int = 0,
+    categoryFilter: Int = 0
 ) {
     val productVm: ProductViewModel = viewModel()
     val context = LocalContext.current
@@ -73,7 +77,7 @@ fun ShopScreen(
     var showSearch by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
 
-    val pagerState = rememberPagerState(pageCount = { sections.size })
+    val pagerState = rememberPagerState(initialPage = initialSection, pageCount = { sections.size })
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) { wishlistViewModel.loadWishlist() }
@@ -88,6 +92,11 @@ fun ShopScreen(
             .background(MaiaBackground)
     ) {
         BlobHeader(
+            leading = {
+                IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.size(40.dp)) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaiaText, modifier = Modifier.size(20.dp))
+                }
+            },
             actions = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(onClick = { showSearch = !showSearch }, modifier = Modifier.size(40.dp)) {
@@ -161,6 +170,9 @@ fun ShopScreen(
             )
         }
 
+        val displayProducts = if (categoryFilter == 0) productVm.filteredProducts
+            else productVm.filteredProducts.filter { it.categoryId == categoryFilter }
+
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) {
             when {
                 isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -181,7 +193,7 @@ fun ShopScreen(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(productVm.filteredProducts) { product ->
+                    items(displayProducts) { product ->
                         ProductCard(
                             product = product,
                             isWishlisted = wishlistViewModel.isWishlisted(product.id),
@@ -237,7 +249,20 @@ private fun ProductCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("${String.format("%.0f", product.price)} EUR", fontSize = 11.sp, color = MaiaTextSecondary)
+            if (product.discountPercent != null) {
+                Column {
+                    Text(
+                        "${String.format("%.0f", product.price)} EUR",
+                        fontSize = 10.sp,
+                        color = MaiaTextSecondary,
+                        textDecoration = TextDecoration.LineThrough
+                    )
+                    val salePrice = product.price * (1 - product.discountPercent / 100.0)
+                    Text("${String.format("%.0f", salePrice)} EUR", fontSize = 11.sp, color = Color(0xFF8B1A1A))
+                }
+            } else {
+                Text("${String.format("%.0f", product.price)} EUR", fontSize = 11.sp, color = MaiaTextSecondary)
+            }
             TextButton(onClick = onAddToCart, contentPadding = PaddingValues(0.dp), modifier = Modifier.height(20.dp)) {
                 Text("+", fontSize = 16.sp, color = MaiaText, fontWeight = FontWeight.Light)
             }

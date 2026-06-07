@@ -29,9 +29,9 @@ import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.WishlistViewModel
 
 private val mainRoutes = setOf(
-    Screen.Home.route, Screen.Shop.route, Screen.Menu.route, Screen.Search.route,
-    Screen.Cart.route, Screen.Account.route, Screen.Wishlist.route,
-    Screen.Orders.route, Screen.Notifications.route
+    Screen.Home.route, Screen.Shop.route, "shop/{s}", "shop/{s}/{catId}",
+    Screen.Menu.route, Screen.Search.route, Screen.Cart.route, Screen.Account.route,
+    Screen.Wishlist.route, Screen.Orders.route, Screen.Notifications.route
 )
 
 @Composable
@@ -79,6 +79,28 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
                     tokenManager = tokenManager,
                     cartViewModel = cartViewModel,
                     wishlistViewModel = wishlistViewModel
+                )
+            }
+            composable("shop/{s}") { backStackEntry ->
+                val s = backStackEntry.arguments?.getString("s")?.toIntOrNull() ?: 0
+                ShopScreen(
+                    navController = navController,
+                    tokenManager = tokenManager,
+                    cartViewModel = cartViewModel,
+                    wishlistViewModel = wishlistViewModel,
+                    initialSection = s
+                )
+            }
+            composable("shop/{s}/{catId}") { backStackEntry ->
+                val s = backStackEntry.arguments?.getString("s")?.toIntOrNull() ?: 0
+                val catId = backStackEntry.arguments?.getString("catId")?.toIntOrNull() ?: 0
+                ShopScreen(
+                    navController = navController,
+                    tokenManager = tokenManager,
+                    cartViewModel = cartViewModel,
+                    wishlistViewModel = wishlistViewModel,
+                    initialSection = s,
+                    categoryFilter = catId
                 )
             }
             composable(Screen.Cart.route) {

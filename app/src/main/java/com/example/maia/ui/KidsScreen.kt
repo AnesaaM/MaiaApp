@@ -9,8 +9,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.shape.RoundedCornerShape
+import coil.compose.AsyncImage
 import com.example.maia.model.KidsCards
 import com.example.maia.network.RetrofitInstance
 import kotlinx.coroutines.launch
@@ -75,16 +77,23 @@ fun KidsScreen() {
                             elevation = CardDefaults.cardElevation(6.dp)
                         ) {
 
-                            Column(modifier = Modifier.padding(12.dp)) {
-
-                                Text(text = card.title)
-
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                Text(
-                                    text = "€ ${card.price}",
-                                    color = Color(0xFF6C5CE7)
+                            Column {
+                                AsyncImage(
+                                    model = card.imageUrl,
+                                    contentDescription = card.title,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(140.dp)
                                 )
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(text = card.title)
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = "€ ${card.price}",
+                                        color = Color(0xFF6C5CE7)
+                                    )
+                                }
                             }
                         }
                     }
