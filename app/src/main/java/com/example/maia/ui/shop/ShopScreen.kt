@@ -38,6 +38,7 @@ import com.example.maia.ui.components.BlobHeader
 import com.example.maia.ui.components.MaiaBackground
 import com.example.maia.ui.components.MaiaText
 import com.example.maia.ui.components.MaiaTextSecondary
+import com.example.maia.ui.components.SizePickerSheet
 import com.example.maia.util.NotificationHelper
 import com.example.maia.data.TokenManager
 import com.example.maia.viewmodel.CartViewModel
@@ -205,15 +206,20 @@ fun ShopScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(displayProducts) { product ->
+                        val source = when (pagerState.currentPage) { 0 -> "women"; 1 -> "men"; else -> "kids" }
                         ProductCard(
                             product = product,
                             isWishlisted = wishlistViewModel.isWishlisted(product.id),
-                            onAddToCart = {
-                                cartViewModel.addToCart(product.id) {
-                                    NotificationHelper.showCartNotification(context, product.title)
-                                }
+                            onAddToCart = { size ->
+                                cartViewModel.addToCart(
+                                    product = product,
+                                    productSource = source,
+                                    size = size,
+                                    onSuccess = { NotificationHelper.showCartNotification(context, product.title) },
+                                    onError = { msg -> android.widget.Toast.makeText(context, "Cart error: $msg", android.widget.Toast.LENGTH_LONG).show() }
+                                )
                             },
-                            onToggleWishlist = { wishlistViewModel.toggleWishlist(product.id) }
+                            onToggleWishlist = { wishlistViewModel.toggleWishlist(product.id, product.title, product.imageUrl, product.price) }
                         )
                     }
                 }
@@ -226,9 +232,22 @@ fun ShopScreen(
 private fun ProductCard(
     product: Product,
     isWishlisted: Boolean,
-    onAddToCart: () -> Unit,
+    onAddToCart: (String) -> Unit,
     onToggleWishlist: () -> Unit
 ) {
+    var showSizePicker by remember { mutableStateOf(false) }
+
+    if (showSizePicker) {
+        SizePickerSheet(
+            productName = product.title,
+            onDismiss = { showSizePicker = false },
+            onAddToCart = { size ->
+                onAddToCart(size)
+                showSizePicker = false
+            }
+        )
+    }
+
     Column {
         Box {
             AsyncImage(
@@ -274,7 +293,11 @@ private fun ProductCard(
             } else {
                 Text("${String.format("%.0f", product.price)} EUR", fontSize = 11.sp, color = MaiaTextSecondary)
             }
-            TextButton(onClick = onAddToCart, contentPadding = PaddingValues(0.dp), modifier = Modifier.height(20.dp)) {
+            TextButton(
+                onClick = { showSizePicker = true },
+                contentPadding = PaddingValues(0.dp),
+                modifier = Modifier.height(20.dp)
+            ) {
                 Text("+", fontSize = 16.sp, color = MaiaText, fontWeight = FontWeight.Light)
             }
         }
