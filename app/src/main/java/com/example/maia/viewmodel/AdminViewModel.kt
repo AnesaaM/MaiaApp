@@ -15,6 +15,7 @@ import com.example.maia.model.admin.UpdateUserRequest
 import com.example.maia.model.admin.User
 import com.example.maia.model.men.MenCardRequest
 import com.example.maia.model.men.MenCategory
+import com.example.maia.model.order.Order
 import com.example.maia.model.women.SetDiscountRequest
 import com.example.maia.model.women.WomenCardRequest
 import com.example.maia.model.women.WomenCategory
@@ -30,6 +31,7 @@ class AdminViewModel : ViewModel() {
     var kidsCards by mutableStateOf<List<KidsCards>>(emptyList()); private set
     var womenCategories by mutableStateOf<List<WomenCategory>>(emptyList()); private set
     var menCategories by mutableStateOf<List<MenCategory>>(emptyList()); private set
+    var orders by mutableStateOf<List<Order>>(emptyList()); private set
     var isLoading by mutableStateOf(false); private set
     var error by mutableStateOf<String?>(null); private set
 
@@ -70,6 +72,7 @@ class AdminViewModel : ViewModel() {
                 // Categories (non-critical)
                 try { womenCategories = RetrofitInstance.womenManagerApi.getCategories() } catch (_: Exception) {}
                 try { menCategories   = RetrofitInstance.menManagerApi.getCategories()   } catch (_: Exception) {}
+                try { orders = RetrofitInstance.orderServiceApi.getAllOrders() } catch (_: Exception) {}
             } finally {
                 isLoading = false
             }
@@ -205,6 +208,16 @@ class AdminViewModel : ViewModel() {
         viewModelScope.launch {
             try { RetrofitInstance.kidsApi.setKidsDiscount(id, mapOf("discountPercent" to pct)); loadAll(); onDone(null) }
             catch (e: Exception) { onDone(e.message ?: "Failed") }
+        }
+    }
+
+    fun updateOrderStatus(orderId: Int, status: String, onDone: (String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                RetrofitInstance.orderServiceApi.updateOrderStatus(orderId, mapOf("status" to status))
+                orders = RetrofitInstance.orderServiceApi.getAllOrders()
+                onDone(null)
+            } catch (e: Exception) { onDone(e.message ?: "Failed to update status") }
         }
     }
 

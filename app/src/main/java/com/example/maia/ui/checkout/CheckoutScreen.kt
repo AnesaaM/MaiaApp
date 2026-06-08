@@ -16,6 +16,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.example.maia.data.TokenManager
+import com.example.maia.navigation.Screen
 import com.example.maia.ui.components.MaiaBackground
 import com.example.maia.ui.components.MaiaButton
 import com.example.maia.ui.components.MaiaText
@@ -23,26 +25,29 @@ import com.example.maia.ui.components.MaiaTextSecondary
 import com.example.maia.viewmodel.CartViewModel
 
 @Composable
-fun CheckoutScreen(navController: NavController, cartViewModel: CartViewModel) {
-    var fullName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
+fun CheckoutScreen(navController: NavController, cartViewModel: CartViewModel, tokenManager: TokenManager) {
+    var fullName by remember { mutableStateOf(tokenManager.getUsername() ?: "") }
+    var email by remember { mutableStateOf(tokenManager.getEmail() ?: "") }
     var phone by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     var city by remember { mutableStateOf("") }
     var postalCode by remember { mutableStateOf("") }
     val isLoading = cartViewModel.isLoading.value
+    val error = cartViewModel.error.value
     val orderPlaced = cartViewModel.orderPlaced.value
+    val placedOrder = cartViewModel.placedOrder.value
 
     LaunchedEffect(orderPlaced) {
-        if (orderPlaced) {
+        if (orderPlaced && placedOrder != null) {
+            val orderRef = "MAIA-${placedOrder.id.toString().padStart(6, '0')}"
             cartViewModel.clearOrderPlaced()
-            navController.popBackStack()
+            navController.navigate(Screen.OrderConfirmed.createRoute(orderRef)) {
+                popUpTo(Screen.Cart.route) { inclusive = true }
+            }
         }
     }
 
-    val formValid = fullName.isNotBlank() && email.isNotBlank() &&
-            phone.isNotBlank() && address.isNotBlank() &&
-            city.isNotBlank() && postalCode.isNotBlank()
+    val formValid = fullName.isNotBlank() && email.isNotBlank()
 
     Column(
         modifier = Modifier
@@ -113,8 +118,18 @@ fun CheckoutScreen(navController: NavController, cartViewModel: CartViewModel) {
 
             Spacer(Modifier.height(8.dp))
 
+            if (error != null) {
+                Text(
+                    text = error,
+                    color = MaterialTheme.colorScheme.error,
+                    fontSize = 12.sp,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(4.dp))
+            }
+
             Button(
-                onClick = { if (formValid) cartViewModel.placeOrder() },
+                onClick = { if (formValid) cartViewModel.placeOrder(email, fullName) },
                 enabled = formValid && !isLoading,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(2.dp),

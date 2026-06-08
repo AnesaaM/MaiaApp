@@ -4,6 +4,7 @@ import com.example.maia.model.cart.AddToCartRequest
 import com.example.maia.model.cart.CartItem
 import com.example.maia.model.cart.CartResponse
 import com.example.maia.model.order.Order
+import com.google.gson.JsonObject
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -27,7 +28,7 @@ interface OrderServiceApi {
 
     // Orders
     @POST("gateway/orders/Order")
-    suspend fun placeOrder(): Order
+    suspend fun placeOrder(@Body body: JsonObject): Order
 
     @GET("gateway/orders/Order")
     suspend fun getMyOrders(): List<Order>

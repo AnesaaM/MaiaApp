@@ -10,6 +10,7 @@ import com.example.maia.model.MenCard
 import com.example.maia.model.WomenCard
 import com.example.maia.model.admin.User
 import com.example.maia.model.men.MenCardRequest
+import com.example.maia.model.order.Order
 import com.example.maia.model.women.SetDiscountRequest
 import com.example.maia.network.RetrofitInstance
 import kotlinx.coroutines.launch
@@ -19,6 +20,7 @@ class SalesManagerViewModel : ViewModel() {
     var womenCards by mutableStateOf<List<WomenCard>>(emptyList()); private set
     var menCards by mutableStateOf<List<MenCard>>(emptyList()); private set
     var kidsCards by mutableStateOf<List<KidsCards>>(emptyList()); private set
+    var orders by mutableStateOf<List<Order>>(emptyList()); private set
     var isLoading by mutableStateOf(false); private set
     var error by mutableStateOf<String?>(null); private set
 
@@ -32,9 +34,22 @@ class SalesManagerViewModel : ViewModel() {
                 womenCards = RetrofitInstance.womenManagerApi.getAllCards()
                 menCards = RetrofitInstance.menManagerApi.getAllCards()
                 kidsCards = RetrofitInstance.kidsApi.getKidsCards()
+                orders = RetrofitInstance.orderServiceApi.getAllOrders()
             } catch (e: Exception) {
                 error = e.message ?: "Failed to load"
             } finally { isLoading = false }
+        }
+    }
+
+    fun updateOrderStatus(orderId: Int, status: String, onDone: (String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                RetrofitInstance.orderServiceApi.updateOrderStatus(orderId, mapOf("status" to status))
+                orders = RetrofitInstance.orderServiceApi.getAllOrders()
+                onDone(null)
+            } catch (e: Exception) {
+                onDone(e.message ?: "Failed to update status")
+            }
         }
     }
 

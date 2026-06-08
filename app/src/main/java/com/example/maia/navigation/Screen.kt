@@ -21,6 +21,9 @@ sealed class Screen(val route: String) {
     object Search : Screen("search")
     object Stores : Screen("stores")
     object Checkout : Screen("checkout")
+    object OrderConfirmed : Screen("order_confirmed/{orderRef}") {
+        fun createRoute(orderRef: String) = "order_confirmed/$orderRef"
+    }
     object AdminDashboard : Screen("dashboard_admin")
     object SalesManagerDashboard : Screen("dashboard_sales")
     object WomenManagerDashboard : Screen("dashboard_women")
