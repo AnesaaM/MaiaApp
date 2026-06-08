@@ -50,14 +50,25 @@ fun AccountScreen(navController: NavController, tokenManager: TokenManager) {
     val blobColor = MaiaBlob
 
     val username = tokenManager.getUsername() ?: "guest"
+    val role = tokenManager.getRole()
     val products = productVm.allProducts.value.take(2)
 
-    val menuItems = listOf(
-        "PURCHASES" to Screen.Orders.route,
-        "CONTACT DATA" to null,
-        "STORES" to Screen.Stores.route,
-        "NOTIFICATIONS" to Screen.Notifications.route
-    )
+    val dashboardRoute = when (role) {
+        "Admin"          -> Screen.AdminDashboard.route
+        "SalesManager"   -> Screen.SalesManagerDashboard.route
+        "WomenManager"   -> Screen.WomenManagerDashboard.route
+        "MenManager"     -> Screen.MenManagerDashboard.route
+        "KidsManager"    -> Screen.KidsManagerDashboard.route
+        else             -> null
+    }
+
+    val menuItems = buildList {
+        add("PURCHASES" to Screen.Orders.route)
+        add("CONTACT DATA" to null)
+        add("STORES" to Screen.Stores.route)
+        add("NOTIFICATIONS" to Screen.Notifications.route)
+        if (dashboardRoute != null) add("DASHBOARD" to dashboardRoute)
+    }
 
     Column(
         modifier = Modifier
