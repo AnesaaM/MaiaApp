@@ -44,7 +44,7 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val startDestination = if (tokenManager.isLoggedIn()) Screen.Home.route else Screen.Login.route
+    val startDestination = Screen.Login.route
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
