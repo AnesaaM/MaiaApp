@@ -181,6 +181,8 @@ fun ShopScreen(
                 error != null -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("Failed to load products", color = MaterialTheme.colorScheme.error, fontSize = 13.sp)
+                        Spacer(Modifier.height(4.dp))
+                        Text(error, color = MaiaTextSecondary, fontSize = 11.sp)
                         Spacer(Modifier.height(8.dp))
                         TextButton(onClick = { productVm.loadProducts() }) {
                             Text("RETRY", letterSpacing = 1.sp, color = MaiaText, fontSize = 11.sp)
