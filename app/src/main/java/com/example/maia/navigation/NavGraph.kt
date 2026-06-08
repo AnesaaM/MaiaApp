@@ -9,9 +9,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import com.example.maia.data.TokenManager
 import com.example.maia.network.RetrofitInstance
 import com.example.maia.ui.account.AccountScreen
@@ -25,6 +27,7 @@ import com.example.maia.ui.auth.LoginScreen
 import com.example.maia.ui.auth.RegisterScreen
 import com.example.maia.ui.auth.VerificationScreen
 import com.example.maia.ui.cart.CartScreen
+import com.example.maia.ui.checkout.CheckoutScreen
 import com.example.maia.ui.components.BottomNavBar
 import com.example.maia.ui.home.HomeScreen
 import com.example.maia.ui.menu.MenuScreen
@@ -56,7 +59,7 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    val startDestination = if (tokenManager.isLoggedIn()) Screen.Home.route else Screen.Login.route
+    val startDestination = Screen.Login.route
 
     Scaffold(
         contentWindowInsets = WindowInsets(0),
@@ -128,8 +131,15 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             }
             composable(Screen.Cart.route) {
                 CartScreen(
+                    navController = navController,
                     cartViewModel = cartViewModel,
                     wishlistViewModel = wishlistViewModel
+                )
+            }
+            composable(Screen.Checkout.route) {
+                CheckoutScreen(
+                    navController = navController,
+                    cartViewModel = cartViewModel
                 )
             }
             composable(Screen.Account.route) {
@@ -150,8 +160,37 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             composable(Screen.Notifications.route) {
                 NotificationsScreen(navController = navController)
             }
-            composable(Screen.Menu.route) {
-                MenuScreen(navController = navController)
+            composable(
+                route = Screen.Menu.route,
+                arguments = listOf(navArgument("tab") { type = NavType.IntType; defaultValue = 0 })
+            ) { backStackEntry ->
+                val tab = backStackEntry.arguments?.getInt("tab") ?: 0
+                MenuScreen(navController = navController, initialTab = tab)
+            }
+            composable(Screen.AdminDashboard.route) {
+                AdminDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.SalesManagerDashboard.route) {
+                SalesManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.WomenManagerDashboard.route) {
+                WomenManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.MenManagerDashboard.route) {
+                MenManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.KidsManagerDashboard.route) {
+                KidsManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.Search.route) {
+                SearchScreen(
+                    navController = navController,
+                    cartViewModel = cartViewModel,
+                    wishlistViewModel = wishlistViewModel
+                )
+            }
+            composable(Screen.Stores.route) {
+                StoresScreen(navController = navController)
             }
             composable(Screen.AdminDashboard.route) {
                 AdminDashboardScreen(navController = navController, tokenManager = tokenManager)

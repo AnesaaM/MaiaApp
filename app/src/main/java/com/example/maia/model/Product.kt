@@ -12,5 +12,5 @@ data class Product(
 )
 
 fun KidsCards.toProduct() = Product(id, title, imageUrl, price, description)
-fun WomenCard.toProduct() = Product(id, title, imageUrl, price, description, color, discountPercent, womanCategoryId)
+fun WomenCard.toProduct() = Product(id, title, imageUrl, price, description ?: "", color ?: "", discountPercent, womanCategoryId)
 fun MenCard.toProduct() = Product(id, title, imageUrl, price, description, color, discountPercent, menCategoryId)

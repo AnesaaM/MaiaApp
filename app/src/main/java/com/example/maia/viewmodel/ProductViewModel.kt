@@ -55,7 +55,7 @@ class ProductViewModel : ViewModel() {
                     Section.KIDS  -> RetrofitInstance.kidsApi.getKidsCards().map { it.toProduct() }
                 }
             } catch (e: Exception) {
-                error.value = e.message ?: "Failed to load products"
+                error.value = e.message ?: "Could not reach server"
             } finally {
                 isLoading.value = false
             }

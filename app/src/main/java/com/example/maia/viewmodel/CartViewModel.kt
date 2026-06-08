@@ -3,8 +3,10 @@ package com.example.maia.viewmodel
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.maia.model.Product
 import com.example.maia.model.cart.AddToCartRequest
 import com.example.maia.model.cart.CartItem
+import com.example.maia.model.cart.CartResponse
 import com.example.maia.network.RetrofitInstance
 import kotlinx.coroutines.launch
 
@@ -20,7 +22,7 @@ class CartViewModel : ViewModel() {
         private set
 
     val totalPrice: Double
-        get() = cartItems.value.sumOf { (it.product?.price ?: 0.0) * it.quantity }
+        get() = cartItems.value.sumOf { it.price * it.quantity }
 
     val itemCount: Int
         get() = cartItems.value.sumOf { it.quantity }
@@ -30,7 +32,7 @@ class CartViewModel : ViewModel() {
             isLoading.value = true
             error.value = null
             try {
-                cartItems.value = RetrofitInstance.orderServiceApi.getCart()
+                cartItems.value = RetrofitInstance.orderServiceApi.getCart().items
             } catch (e: Exception) {
                 error.value = e.message ?: "Failed to load cart"
             } finally {
@@ -39,24 +41,54 @@ class CartViewModel : ViewModel() {
         }
     }
 
-    fun addToCart(productId: Int, onSuccess: () -> Unit = {}) {
+    fun addToCart(
+        product: Product,
+        productSource: String,
+        size: String? = null,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) {
+        val placeholder = CartItem(
+            id = -product.id,
+            productId = product.id,
+            productName = product.title,
+            imageUrl = product.imageUrl,
+            price = product.price,
+            quantity = 1,
+            size = size
+        )
+        cartItems.value = cartItems.value + placeholder
+        onSuccess()
+
         viewModelScope.launch {
             try {
-                RetrofitInstance.orderServiceApi.addToCart(AddToCartRequest(productId))
-                onSuccess()
+                RetrofitInstance.orderServiceApi.addToCart(
+                    AddToCartRequest(
+                        productId = product.id,
+                        productSource = productSource,
+                        productName = product.title,
+                        imageUrl = product.imageUrl,
+                        price = product.price,
+                        size = size
+                    )
+                )
                 loadCart()
             } catch (e: Exception) {
-                error.value = e.message ?: "Failed to add to cart"
+                cartItems.value = cartItems.value.filter { it.id != -product.id }
+                error.value = e.message
+                onError(e.message ?: "Failed to add to cart")
             }
         }
     }
 
     fun removeFromCart(cartItemId: Int) {
+        val removed = cartItems.value.find { it.id == cartItemId }
+        cartItems.value = cartItems.value.filter { it.id != cartItemId }
         viewModelScope.launch {
             try {
                 RetrofitInstance.orderServiceApi.removeFromCart(cartItemId)
-                loadCart()
             } catch (e: Exception) {
+                if (removed != null) cartItems.value = cartItems.value + removed
                 error.value = e.message ?: "Failed to remove item"
             }
         }
