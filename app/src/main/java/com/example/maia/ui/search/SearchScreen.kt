@@ -41,6 +41,7 @@ import com.example.maia.ui.components.MaiaBlob
 import com.example.maia.ui.components.MaiaButton
 import com.example.maia.ui.components.MaiaText
 import com.example.maia.ui.components.MaiaTextSecondary
+import com.example.maia.ui.components.SizePickerSheet
 import com.example.maia.util.NotificationHelper
 import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.ProductViewModel
@@ -335,7 +336,20 @@ fun SearchScreen(
 
 @Composable
 private fun SearchProductCard(product: Product, onAddToCart: () -> Unit) {
-    Column(modifier = Modifier.clickable { onAddToCart() }) {
+    var showSizePicker by remember { mutableStateOf(false) }
+
+    if (showSizePicker) {
+        SizePickerSheet(
+            productName = product.title,
+            onDismiss = { showSizePicker = false },
+            onAddToCart = { _ ->
+                onAddToCart()
+                showSizePicker = false
+            }
+        )
+    }
+
+    Column(modifier = Modifier.clickable { showSizePicker = true }) {
         Box {
             AsyncImage(
                 model = product.imageUrl,
@@ -346,7 +360,6 @@ private fun SearchProductCard(product: Product, onAddToCart: () -> Unit) {
                     .background(Color(0xFFEDE8E3)),
                 contentScale = ContentScale.Crop
             )
-            // Color dot top-left
             Box(
                 modifier = Modifier
                     .padding(6.dp)

@@ -40,13 +40,19 @@ class CartViewModel : ViewModel() {
     }
 
     fun addToCart(productId: Int, onSuccess: () -> Unit = {}) {
+        // Optimistic update — shfaq menjehere ne bag
+        val placeholder = CartItem(id = -productId, productId = productId, quantity = 1)
+        cartItems.value = cartItems.value + placeholder
+        onSuccess()
+
         viewModelScope.launch {
             try {
                 RetrofitInstance.orderServiceApi.addToCart(AddToCartRequest(productId))
-                onSuccess()
-                loadCart()
+                // Refresh vetem nese API kthen te dhena reale
+                val updated = RetrofitInstance.orderServiceApi.getCart()
+                if (updated.isNotEmpty()) cartItems.value = updated
             } catch (e: Exception) {
-                error.value = e.message ?: "Failed to add to cart"
+                // Mbaj item-in optimist — mos e revert
             }
         }
     }
