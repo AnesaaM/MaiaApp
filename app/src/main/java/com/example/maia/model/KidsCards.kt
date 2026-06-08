@@ -5,5 +5,6 @@ data class KidsCards(
     val title: String,
     val imageUrl: String,
     val price: Double,
-    val description: String
+    val description: String,
+    val discountPercent: Int? = null
 )

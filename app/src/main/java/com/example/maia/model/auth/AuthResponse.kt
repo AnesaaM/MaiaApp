@@ -5,5 +5,7 @@ data class AuthResponse(
     val role: String = "",
     val email: String = "",
     val firstName: String = "",
-    val lastName: String = ""
+    val lastName: String = "",
+    val token: String? = null,
+    val accessToken: String? = null
 )

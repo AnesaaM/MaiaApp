@@ -14,6 +14,9 @@ class TokenManager(context: Context) {
     fun saveRole(role: String) = prefs.edit().putString("role", role).apply()
     fun getRole(): String? = prefs.getString("role", null)
 
+    fun saveToken(token: String) = prefs.edit().putString("jwt_token", token).apply()
+    fun getToken(): String? = prefs.getString("jwt_token", null)
+
     fun clear() = prefs.edit().clear().apply()
 
     // Auth is cookie-based — logged in if we have saved user info
