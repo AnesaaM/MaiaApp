@@ -13,27 +13,27 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 
 interface AdminApi {
-    @GET("gateway/auth/users")
+    @GET("api/users")
     suspend fun getAllUsers(): List<User>
 
-    @GET("gateway/auth/users/customers")
+    @GET("api/users/customers")
     suspend fun getCustomers(): List<User>
 
-    @GET("gateway/auth/users/roles")
+    @GET("api/users/roles")
     suspend fun getRoles(): List<Role>
 
-    @POST("gateway/auth/users/staff")
+    @POST("api/users/staff")
     suspend fun createStaff(@Body request: CreateStaffRequest)
 
-    @PUT("gateway/auth/users/{id}")
+    @PUT("api/users/{id}")
     suspend fun updateUser(@Path("id") id: Int, @Body request: UpdateUserRequest)
 
-    @DELETE("gateway/auth/users/{id}")
+    @DELETE("api/users/{id}")
     suspend fun deleteUser(@Path("id") id: Int)
 
-    @PUT("gateway/auth/users/role")
+    @PUT("api/users/role")
     suspend fun changeRole(@Body request: ChangeRoleRequest)
 
-    @PUT("gateway/auth/users/{id}/status")
+    @PUT("api/users/{id}/status")
     suspend fun setUserStatus(@Path("id") id: Int, @Body isActive: Boolean)
 }

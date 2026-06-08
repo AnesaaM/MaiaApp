@@ -11,12 +11,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -236,34 +238,48 @@ private fun AdminStaffTab(vm: AdminViewModel) {
             AdminBtnDark("+ ADD STAFF") { showAdd = true }
         }
         LazyColumn(
-            Modifier.weight(1f).fillMaxWidth().border(1.dp, DashBorder, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp))
+            Modifier.weight(1f).fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            stickyHeader {
-                AdminHeaderRow {
-                    AdminHeaderCell("NAME", Modifier.weight(1f))
-                    AdminHeaderCell("EMAIL", Modifier.weight(1f))
-                    AdminHeaderCell("ROLE", Modifier.width(140.dp))
-                    AdminHeaderCell("STATUS", Modifier.width(90.dp))
-                    AdminHeaderCell("ACTIONS", Modifier.width(210.dp))
-                }
-            }
             items(filtered) { u ->
-                AdminDataRow {
-                    AdminDataCell(Modifier.weight(1f)) { Text("${u.firstName} ${u.lastName}", fontSize = 13.sp, color = ActionDark) }
-                    AdminDataCell(Modifier.weight(1f)) { Text(u.email, fontSize = 12.sp, color = DashSecText) }
-                    AdminDataCell(Modifier.width(140.dp)) { AdminRoleChip(u.roleType) }
-                    AdminDataCell(Modifier.width(90.dp)) { AdminStatusChip(u.isActive) }
-                    AdminDataCell(Modifier.width(210.dp)) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                            AdminBtnOutlined("EDIT") { editTarget = u }
-                            AdminBtnOutlined(if (u.isActive) "DISABLE" else "ENABLE") {
-                                vm.toggleStatus(u) { e -> actionError = e }
+                Card(
+                    Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = DashCardBg),
+                    border = BorderStroke(1.dp, DashBorder),
+                    shape = RoundedCornerShape(6.dp)
+                ) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "${u.firstName} ${u.lastName}",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium,
+                                color = ActionDark,
+                                modifier = Modifier.weight(1f)
+                            )
+                            AdminStatusChip(u.isActive)
+                        }
+                        Text(u.email, fontSize = 12.sp, color = DashSecText)
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            AdminRoleChip(u.roleType)
+                            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                AdminBtnOutlined("EDIT") { editTarget = u }
+                                AdminBtnOutlined(if (u.isActive) "DISABLE" else "ENABLE") {
+                                    vm.toggleStatus(u) { e -> actionError = e }
+                                }
+                                AdminBtnDelete { vm.deleteUser(u.userID) { e -> actionError = e } }
                             }
-                            AdminBtnDelete { vm.deleteUser(u.userID) { e -> actionError = e } }
                         }
                     }
                 }
-                Box(Modifier.fillMaxWidth().height(1.dp).background(RowDivider))
             }
         }
         Spacer(Modifier.height(16.dp))
@@ -311,92 +327,103 @@ private fun AdminProductsTab(vm: AdminViewModel, section: String) {
         when (section) {
             "women" -> {
                 val list = vm.womenCards.filter { search.isBlank() || it.title.contains(search, true) }
-                LazyColumn(
-                    Modifier.weight(1f).fillMaxWidth().border(1.dp, DashBorder, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp))
-                ) {
-                    stickyHeader {
-                        AdminHeaderRow {
-                            Spacer(Modifier.width(72.dp))
-                            AdminHeaderCell("TITLE", Modifier.weight(1f))
-                            AdminHeaderCell("PRICE", Modifier.width(100.dp))
-                            AdminHeaderCell("CATEGORY", Modifier.width(120.dp))
-                            AdminHeaderCell("ACTIONS", Modifier.width(140.dp))
-                        }
-                    }
+                LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(list) { p ->
-                        AdminDataRow {
-                            AdminThumb(p.imageUrl)
-                            AdminDataCell(Modifier.weight(1f)) { Text(p.title, fontSize = 13.sp, color = ActionDark) }
-                            AdminDataCell(Modifier.width(100.dp)) { Text("€${"%.2f".format(p.price)}", fontSize = 12.sp, color = DashSecText) }
-                            AdminDataCell(Modifier.width(120.dp)) { Text(p.category, fontSize = 12.sp, color = DashSecText) }
-                            AdminDataCell(Modifier.width(140.dp)) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    AdminBtnOutlined("EDIT") { editWomen = p }
-                                    AdminBtnDelete { vm.deleteWomenCard(p.id) { e -> actionError = e } }
+                        Card(
+                            Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = DashCardBg),
+                            border = BorderStroke(1.dp, DashBorder),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+                                AsyncImage(
+                                    model = p.imageUrl, contentDescription = null,
+                                    modifier = Modifier.size(60.dp).clip(RoundedCornerShape(4.dp)),
+                                    contentScale = ContentScale.Crop,
+                                    placeholder = ColorPainter(Color(0xFFEEE8E2)),
+                                    error = ColorPainter(Color(0xFFEEE8E2))
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(p.title, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = ActionDark, maxLines = 2)
+                                    Text("€${"%.2f".format(p.price)} · ${p.category}", fontSize = 12.sp, color = DashSecText)
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            AdminBtnOutlined("EDIT") { editWomen = p }
+                                            AdminBtnDelete { vm.deleteWomenCard(p.id) { e -> actionError = e } }
+                                        }
+                                    }
                                 }
                             }
                         }
-                        Box(Modifier.fillMaxWidth().height(1.dp).background(RowDivider))
                     }
                 }
             }
             "men" -> {
                 val list = vm.menCards.filter { search.isBlank() || it.title.contains(search, true) }
-                LazyColumn(
-                    Modifier.weight(1f).fillMaxWidth().border(1.dp, DashBorder, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp))
-                ) {
-                    stickyHeader {
-                        AdminHeaderRow {
-                            Spacer(Modifier.width(72.dp))
-                            AdminHeaderCell("TITLE", Modifier.weight(1f))
-                            AdminHeaderCell("PRICE", Modifier.width(100.dp))
-                            AdminHeaderCell("CATEGORY", Modifier.width(120.dp))
-                            AdminHeaderCell("ACTIONS", Modifier.width(140.dp))
-                        }
-                    }
+                LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(list) { p ->
-                        AdminDataRow {
-                            AdminThumb(p.imageUrl)
-                            AdminDataCell(Modifier.weight(1f)) { Text(p.title, fontSize = 13.sp, color = ActionDark) }
-                            AdminDataCell(Modifier.width(100.dp)) { Text("€${"%.2f".format(p.price)}", fontSize = 12.sp, color = DashSecText) }
-                            AdminDataCell(Modifier.width(120.dp)) { Text(p.menCategoryName, fontSize = 12.sp, color = DashSecText) }
-                            AdminDataCell(Modifier.width(140.dp)) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    AdminBtnOutlined("EDIT") { editMen = p }
-                                    AdminBtnDelete { vm.deleteMenCard(p.id) { e -> actionError = e } }
+                        Card(
+                            Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = DashCardBg),
+                            border = BorderStroke(1.dp, DashBorder),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+                                AsyncImage(
+                                    model = p.imageUrl, contentDescription = null,
+                                    modifier = Modifier.size(60.dp).clip(RoundedCornerShape(4.dp)),
+                                    contentScale = ContentScale.Crop,
+                                    placeholder = ColorPainter(Color(0xFFEEE8E2)),
+                                    error = ColorPainter(Color(0xFFEEE8E2))
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(p.title, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = ActionDark, maxLines = 2)
+                                    Text("€${"%.2f".format(p.price)} · ${p.menCategoryName}", fontSize = 12.sp, color = DashSecText)
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            AdminBtnOutlined("EDIT") { editMen = p }
+                                            AdminBtnDelete { vm.deleteMenCard(p.id) { e -> actionError = e } }
+                                        }
+                                    }
                                 }
                             }
                         }
-                        Box(Modifier.fillMaxWidth().height(1.dp).background(RowDivider))
                     }
                 }
             }
             else -> {
                 val list = vm.kidsCards.filter { search.isBlank() || it.title.contains(search, true) }
-                LazyColumn(
-                    Modifier.weight(1f).fillMaxWidth().border(1.dp, DashBorder, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp))
-                ) {
-                    stickyHeader {
-                        AdminHeaderRow {
-                            Spacer(Modifier.width(72.dp))
-                            AdminHeaderCell("TITLE", Modifier.weight(1f))
-                            AdminHeaderCell("PRICE", Modifier.width(100.dp))
-                            AdminHeaderCell("ACTIONS", Modifier.width(140.dp))
-                        }
-                    }
+                LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     items(list) { p ->
-                        AdminDataRow {
-                            AdminThumb(p.imageUrl)
-                            AdminDataCell(Modifier.weight(1f)) { Text(p.title, fontSize = 13.sp, color = ActionDark) }
-                            AdminDataCell(Modifier.width(100.dp)) { Text("€${"%.2f".format(p.price)}", fontSize = 12.sp, color = DashSecText) }
-                            AdminDataCell(Modifier.width(140.dp)) {
-                                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    AdminBtnOutlined("EDIT") { editKids = p }
-                                    AdminBtnDelete { vm.deleteKidsCard(p.id) { e -> actionError = e } }
+                        Card(
+                            Modifier.fillMaxWidth(),
+                            colors = CardDefaults.cardColors(containerColor = DashCardBg),
+                            border = BorderStroke(1.dp, DashBorder),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+                                AsyncImage(
+                                    model = p.imageUrl, contentDescription = null,
+                                    modifier = Modifier.size(60.dp).clip(RoundedCornerShape(4.dp)),
+                                    contentScale = ContentScale.Crop,
+                                    placeholder = ColorPainter(Color(0xFFEEE8E2)),
+                                    error = ColorPainter(Color(0xFFEEE8E2))
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text(p.title, fontSize = 13.sp, fontWeight = FontWeight.Medium, color = ActionDark, maxLines = 2)
+                                    Text("€${"%.2f".format(p.price)}", fontSize = 12.sp, color = DashSecText)
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                                        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                            AdminBtnOutlined("EDIT") { editKids = p }
+                                            AdminBtnDelete { vm.deleteKidsCard(p.id) { e -> actionError = e } }
+                                        }
+                                    }
                                 }
                             }
                         }
-                        Box(Modifier.fillMaxWidth().height(1.dp).background(RowDivider))
                     }
                 }
             }
@@ -802,7 +829,16 @@ private fun WomenProductDialog(card: WomenCard?, categories: List<WomenCategory>
         onDismissRequest = onDismiss,
         title = { Text(if (card == null) "ADD PRODUCT" else "EDIT PRODUCT", fontSize = 11.sp, letterSpacing = 2.sp) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (imageUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = imageUrl, contentDescription = null,
+                        modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(6.dp)),
+                        contentScale = ContentScale.Crop,
+                        placeholder = ColorPainter(Color(0xFFEEE8E2)),
+                        error = ColorPainter(Color(0xFFE0D6CE))
+                    )
+                }
                 OutlinedTextField(title, { title = it }, label = { Text("Title") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(price, { price = it }, label = { Text("Price (€)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(imageUrl, { imageUrl = it }, label = { Text("Image URL") }, singleLine = true, modifier = Modifier.fillMaxWidth())
@@ -839,7 +875,16 @@ private fun MenProductDialog(card: MenCard?, categories: List<MenCategory>, onDi
         onDismissRequest = onDismiss,
         title = { Text(if (card == null) "ADD PRODUCT" else "EDIT PRODUCT", fontSize = 11.sp, letterSpacing = 2.sp) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (imageUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = imageUrl, contentDescription = null,
+                        modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(6.dp)),
+                        contentScale = ContentScale.Crop,
+                        placeholder = ColorPainter(Color(0xFFEEE8E2)),
+                        error = ColorPainter(Color(0xFFE0D6CE))
+                    )
+                }
                 OutlinedTextField(title, { title = it }, label = { Text("Title") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(price, { price = it }, label = { Text("Price (€)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(imageUrl, { imageUrl = it }, label = { Text("Image URL") }, singleLine = true, modifier = Modifier.fillMaxWidth())
@@ -875,7 +920,16 @@ private fun KidsProductDialog(card: KidsCards?, onDismiss: () -> Unit, onConfirm
         onDismissRequest = onDismiss,
         title = { Text(if (card == null) "ADD KIDS PRODUCT" else "EDIT KIDS PRODUCT", fontSize = 11.sp, letterSpacing = 2.sp) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (imageUrl.isNotBlank()) {
+                    AsyncImage(
+                        model = imageUrl, contentDescription = null,
+                        modifier = Modifier.fillMaxWidth().height(140.dp).clip(RoundedCornerShape(6.dp)),
+                        contentScale = ContentScale.Crop,
+                        placeholder = ColorPainter(Color(0xFFEEE8E2)),
+                        error = ColorPainter(Color(0xFFE0D6CE))
+                    )
+                }
                 OutlinedTextField(title, { title = it }, label = { Text("Title") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(price, { price = it }, label = { Text("Price (€)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(imageUrl, { imageUrl = it }, label = { Text("Image URL") }, singleLine = true, modifier = Modifier.fillMaxWidth())
