@@ -66,12 +66,18 @@ fun WishlistScreen(wishlistViewModel: WishlistViewModel, cartViewModel: CartView
                             item = item,
                             onRemove = { wishlistViewModel.removeFromWishlist(item.id) },
                             onAddToCart = {
-                                cartViewModel.addToCart(item.productId) {
-                                    NotificationHelper.showCartNotification(
-                                        context,
-                                        item.product?.title ?: "Item"
-                                    )
-                                }
+                                val name = item.productName ?: return@WishlistItemRow
+                                val fakeProduct = com.example.maia.model.Product(
+                                    id = item.productId,
+                                    title = name,
+                                    imageUrl = item.productImage ?: "",
+                                    price = item.price ?: 0.0
+                                )
+                                cartViewModel.addToCart(
+                                    product = fakeProduct,
+                                    productSource = "women",
+                                    onSuccess = { NotificationHelper.showCartNotification(context, name) }
+                                )
                             }
                         )
                     }
@@ -97,21 +103,21 @@ private fun WishlistItemRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             AsyncImage(
-                model = item.product?.imageUrl,
-                contentDescription = item.product?.title,
+                model = item.productImage,
+                contentDescription = item.productName,
                 modifier = Modifier.size(80.dp),
                 contentScale = ContentScale.Crop
             )
             Spacer(Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    item.product?.title ?: "Product #${item.productId}",
+                    item.productName ?: "Product #${item.productId}",
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 2
                 )
-                if (item.product != null) {
+                if (item.price != null) {
                     Spacer(Modifier.height(4.dp))
-                    Text("€ ${String.format("%.2f", item.product.price)}", color = Purple, fontWeight = FontWeight.Bold)
+                    Text("€ ${String.format("%.2f", item.price)}", color = Purple, fontWeight = FontWeight.Bold)
                 }
                 Spacer(Modifier.height(8.dp))
                 Button(

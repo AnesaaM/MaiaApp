@@ -18,6 +18,7 @@ import com.example.maia.ui.auth.LoginScreen
 import com.example.maia.ui.auth.RegisterScreen
 import com.example.maia.ui.auth.VerificationScreen
 import com.example.maia.ui.cart.CartScreen
+import com.example.maia.ui.checkout.CheckoutScreen
 import com.example.maia.ui.components.BottomNavBar
 import com.example.maia.ui.home.HomeScreen
 import com.example.maia.ui.menu.MenuScreen
@@ -115,8 +116,15 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             }
             composable(Screen.Cart.route) {
                 CartScreen(
+                    navController = navController,
                     cartViewModel = cartViewModel,
                     wishlistViewModel = wishlistViewModel
+                )
+            }
+            composable(Screen.Checkout.route) {
+                CheckoutScreen(
+                    navController = navController,
+                    cartViewModel = cartViewModel
                 )
             }
             composable(Screen.Account.route) {

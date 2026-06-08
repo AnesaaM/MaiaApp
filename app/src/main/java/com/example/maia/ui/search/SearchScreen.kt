@@ -320,12 +320,17 @@ fun SearchScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(sorted) { product ->
+                    val source = when (selectedTab) { 0 -> "women"; 1 -> "men"; else -> "kids" }
                     SearchProductCard(
                         product = product,
-                        onAddToCart = {
-                            cartViewModel.addToCart(product.id) {
-                                NotificationHelper.showCartNotification(context, product.title)
-                            }
+                        onAddToCart = { size ->
+                            cartViewModel.addToCart(
+                                product = product,
+                                productSource = source,
+                                size = size,
+                                onSuccess = { NotificationHelper.showCartNotification(context, product.title) },
+                                onError = { msg -> android.widget.Toast.makeText(context, "Cart error: $msg", android.widget.Toast.LENGTH_LONG).show() }
+                            )
                         }
                     )
                 }
@@ -335,15 +340,15 @@ fun SearchScreen(
 }
 
 @Composable
-private fun SearchProductCard(product: Product, onAddToCart: () -> Unit) {
+private fun SearchProductCard(product: Product, onAddToCart: (String) -> Unit) {
     var showSizePicker by remember { mutableStateOf(false) }
 
     if (showSizePicker) {
         SizePickerSheet(
             productName = product.title,
             onDismiss = { showSizePicker = false },
-            onAddToCart = { _ ->
-                onAddToCart()
+            onAddToCart = { size ->
+                onAddToCart(size)
                 showSizePicker = false
             }
         )
