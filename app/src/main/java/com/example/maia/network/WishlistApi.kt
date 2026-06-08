@@ -1,7 +1,7 @@
 package com.example.maia.network
 
 import com.example.maia.model.wishlist.AddToWishlistRequest
-import com.example.maia.model.wishlist.WishlistItem
+import com.example.maia.model.wishlist.WishlistResponse
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
@@ -10,10 +10,10 @@ import retrofit2.http.Path
 
 interface WishlistApi {
     @GET("gateway/women/Wishlist")
-    suspend fun getWishlist(): List<WishlistItem>
+    suspend fun getWishlist(): WishlistResponse
 
     @POST("gateway/women/Wishlist")
-    suspend fun addToWishlist(@Body request: AddToWishlistRequest): WishlistItem
+    suspend fun addToWishlist(@Body request: AddToWishlistRequest)
 
     @DELETE("gateway/women/Wishlist/{id}")
     suspend fun removeFromWishlist(@Path("id") id: Int)

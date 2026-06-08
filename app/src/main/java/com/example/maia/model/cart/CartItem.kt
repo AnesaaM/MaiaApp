@@ -1,10 +1,11 @@
 package com.example.maia.model.cart
 
-import com.example.maia.model.Product
-
 data class CartItem(
     val id: Int,
     val productId: Int,
-    val quantity: Int,
-    val product: Product? = null
+    val productName: String = "",
+    val imageUrl: String = "",
+    val price: Double = 0.0,
+    val quantity: Int = 1,
+    val size: String? = null
 )

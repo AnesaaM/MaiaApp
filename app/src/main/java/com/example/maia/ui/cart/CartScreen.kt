@@ -29,6 +29,8 @@ import com.example.maia.ui.components.MaiaBlob
 import com.example.maia.ui.components.MaiaButton
 import com.example.maia.ui.components.MaiaText
 import com.example.maia.ui.components.MaiaTextSecondary
+import androidx.navigation.NavController
+import com.example.maia.navigation.Screen
 import com.example.maia.util.NotificationHelper
 import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.WishlistViewModel
@@ -36,11 +38,15 @@ import com.example.maia.viewmodel.WishlistViewModel
 @Preview(showBackground = true, name = "Cart Screen")
 @Composable
 fun CartScreenPreview() {
-    CartScreen(cartViewModel = CartViewModel(), wishlistViewModel = WishlistViewModel())
+    CartScreen(
+        navController = androidx.navigation.compose.rememberNavController(),
+        cartViewModel = CartViewModel(),
+        wishlistViewModel = WishlistViewModel()
+    )
 }
 
 @Composable
-fun CartScreen(cartViewModel: CartViewModel, wishlistViewModel: WishlistViewModel) {
+fun CartScreen(navController: NavController, cartViewModel: CartViewModel, wishlistViewModel: WishlistViewModel) {
     val context = LocalContext.current
     var selectedTab by remember { mutableIntStateOf(0) }
     val blobColor = MaiaBlob
@@ -144,16 +150,29 @@ fun CartScreen(cartViewModel: CartViewModel, wishlistViewModel: WishlistViewMode
                 isLoading = cartLoading,
                 total = cartViewModel.totalPrice,
                 onRemove = { cartViewModel.removeFromCart(it) },
-                onPlaceOrder = { cartViewModel.placeOrder() }
+                onSave = { item ->
+                    wishlistViewModel.toggleWishlist(item.productId, item.productName, item.imageUrl, item.price)
+                    cartViewModel.removeFromCart(item.id)
+                },
+                onPlaceOrder = { navController.navigate(Screen.Checkout.route) }
             )
             1 -> FavoritesContent(
                 wishlistItems = wishlistItems,
                 isLoading = wishlistLoading,
                 onRemove = { wishlistViewModel.removeFromWishlist(it) },
-                onAddToCart = { productId, name ->
-                    cartViewModel.addToCart(productId) {
-                        NotificationHelper.showCartNotification(context, name)
-                    }
+                onAddToCart = { item ->
+                    val name = item.productName ?: return@FavoritesContent
+                    val fakeProduct = com.example.maia.model.Product(
+                        id = item.productId,
+                        title = name,
+                        imageUrl = item.productImage ?: "",
+                        price = item.price ?: 0.0
+                    )
+                    cartViewModel.addToCart(
+                        product = fakeProduct,
+                        productSource = "women",
+                        onSuccess = { NotificationHelper.showCartNotification(context, name) }
+                    )
                 }
             )
         }
@@ -166,6 +185,7 @@ private fun ShoppingBagContent(
     isLoading: Boolean,
     total: Double,
     onRemove: (Int) -> Unit,
+    onSave: (CartItem) -> Unit,
     onPlaceOrder: () -> Unit
 ) {
     when {
@@ -190,7 +210,7 @@ private fun ShoppingBagContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 items(cartItems, key = { it.id }) { item ->
-                    CartItemRow(item = item, onRemove = { onRemove(item.id) })
+                    CartItemRow(item = item, onRemove = { onRemove(item.id) }, onSave = { onSave(item) })
                     HorizontalDivider(color = Color(0xFFEDE8E3), thickness = 0.5.dp)
                 }
             }
@@ -222,22 +242,22 @@ private fun ShoppingBagContent(
 }
 
 @Composable
-private fun CartItemRow(item: CartItem, onRemove: () -> Unit) {
+private fun CartItemRow(item: CartItem, onRemove: () -> Unit, onSave: () -> Unit) {
     Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         AsyncImage(
-            model = item.product?.imageUrl,
+            model = item.imageUrl,
             contentDescription = null,
             modifier = Modifier.size(80.dp).background(Color(0xFFEDE8E3)),
             contentScale = ContentScale.Crop
         )
         Spacer(Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(item.product?.title ?: "Product #${item.productId}", fontSize = 12.sp, letterSpacing = 0.5.sp, color = MaiaText)
+            Text(item.productName.ifEmpty { "Product #${item.productId}" }, fontSize = 12.sp, letterSpacing = 0.5.sp, color = MaiaText)
             Spacer(Modifier.height(4.dp))
             Text("Qty ${item.quantity}", fontSize = 11.sp, color = MaiaTextSecondary)
-            if (item.product != null) {
+            if (item.price > 0) {
                 Spacer(Modifier.height(4.dp))
-                Text("${String.format("%.0f", item.product.price)} EUR", fontSize = 12.sp, color = MaiaText)
+                Text("${String.format("%.0f", item.price)} EUR", fontSize = 12.sp, color = MaiaText)
             }
             Spacer(Modifier.height(8.dp))
             Row {
@@ -245,7 +265,7 @@ private fun CartItemRow(item: CartItem, onRemove: () -> Unit) {
                     Text("DELETE", fontSize = 10.sp, letterSpacing = 1.sp, color = MaiaTextSecondary)
                 }
                 Text(" | ", fontSize = 10.sp, color = MaiaTextSecondary)
-                TextButton(onClick = {}, contentPadding = PaddingValues(0.dp)) {
+                TextButton(onClick = onSave, contentPadding = PaddingValues(0.dp)) {
                     Text("SAVE", fontSize = 10.sp, letterSpacing = 1.sp, color = MaiaTextSecondary)
                 }
             }
@@ -258,7 +278,7 @@ private fun FavoritesContent(
     wishlistItems: List<WishlistItem>,
     isLoading: Boolean,
     onRemove: (Int) -> Unit,
-    onAddToCart: (Int, String) -> Unit
+    onAddToCart: (WishlistItem) -> Unit
 ) {
     when {
         isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -277,17 +297,17 @@ private fun FavoritesContent(
             items(wishlistItems, key = { it.id }) { item ->
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
                     AsyncImage(
-                        model = item.product?.imageUrl,
+                        model = item.productImage,
                         contentDescription = null,
                         modifier = Modifier.size(80.dp).background(Color(0xFFEDE8E3)),
                         contentScale = ContentScale.Crop
                     )
                     Spacer(Modifier.width(16.dp))
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(item.product?.title ?: "Product #${item.productId}", fontSize = 12.sp, color = MaiaText)
-                        if (item.product != null) {
+                        Text(item.productName ?: "Product #${item.productId}", fontSize = 12.sp, color = MaiaText)
+                        if (item.price != null) {
                             Spacer(Modifier.height(4.dp))
-                            Text("${String.format("%.0f", item.product.price)} EUR", fontSize = 11.sp, color = MaiaTextSecondary)
+                            Text("${String.format("%.0f", item.price)} EUR", fontSize = 11.sp, color = MaiaTextSecondary)
                         }
                         Spacer(Modifier.height(8.dp))
                         Row {
@@ -296,7 +316,7 @@ private fun FavoritesContent(
                             }
                             Text(" | ", fontSize = 10.sp, color = MaiaTextSecondary)
                             TextButton(
-                                onClick = { onAddToCart(item.productId, item.product?.title ?: "") },
+                                onClick = { onAddToCart(item) },
                                 contentPadding = PaddingValues(0.dp)
                             ) {
                                 Text("ADD TO BAG", fontSize = 10.sp, letterSpacing = 1.sp, color = MaiaText)

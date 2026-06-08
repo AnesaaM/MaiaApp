@@ -195,15 +195,20 @@ fun ShopScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     items(displayProducts) { product ->
+                        val source = when (pagerState.currentPage) { 0 -> "women"; 1 -> "men"; else -> "kids" }
                         ProductCard(
                             product = product,
                             isWishlisted = wishlistViewModel.isWishlisted(product.id),
-                            onAddToCart = {
-                                cartViewModel.addToCart(product.id) {
-                                    NotificationHelper.showCartNotification(context, product.title)
-                                }
+                            onAddToCart = { size ->
+                                cartViewModel.addToCart(
+                                    product = product,
+                                    productSource = source,
+                                    size = size,
+                                    onSuccess = { NotificationHelper.showCartNotification(context, product.title) },
+                                    onError = { msg -> android.widget.Toast.makeText(context, "Cart error: $msg", android.widget.Toast.LENGTH_LONG).show() }
+                                )
                             },
-                            onToggleWishlist = { wishlistViewModel.toggleWishlist(product.id) }
+                            onToggleWishlist = { wishlistViewModel.toggleWishlist(product.id, product.title, product.imageUrl, product.price) }
                         )
                     }
                 }
@@ -216,7 +221,7 @@ fun ShopScreen(
 private fun ProductCard(
     product: Product,
     isWishlisted: Boolean,
-    onAddToCart: () -> Unit,
+    onAddToCart: (String) -> Unit,
     onToggleWishlist: () -> Unit
 ) {
     var showSizePicker by remember { mutableStateOf(false) }
@@ -225,8 +230,8 @@ private fun ProductCard(
         SizePickerSheet(
             productName = product.title,
             onDismiss = { showSizePicker = false },
-            onAddToCart = { _ ->
-                onAddToCart()
+            onAddToCart = { size ->
+                onAddToCart(size)
                 showSizePicker = false
             }
         )
