@@ -93,7 +93,16 @@ fun ShopScreen(
     ) {
         BlobHeader(
             leading = {
-                IconButton(onClick = { navController.popBackStack() }, modifier = Modifier.size(40.dp)) {
+                IconButton(
+                    onClick = {
+                        val idx = sections.indexOfFirst { it.second == productVm.currentSection.value }
+                        navController.navigate(Screen.Menu.createRoute(idx)) {
+                            popUpTo(Screen.Home.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
+                    },
+                    modifier = Modifier.size(40.dp)
+                ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = MaiaText, modifier = Modifier.size(20.dp))
                 }
             },

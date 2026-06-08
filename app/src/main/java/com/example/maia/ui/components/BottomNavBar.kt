@@ -48,7 +48,7 @@ fun BottomNavBar(navController: NavController, currentRoute: String?, cartCount:
             NavIcon(
                 icon = Icons.Default.Menu,
                 selected = currentRoute == Screen.Menu.route,
-                onClick = { navController.navigateTo(currentRoute, Screen.Menu.route) }
+                onClick = { navController.navigateTo(currentRoute, Screen.Menu.createRoute()) }
             )
             NavIcon(
                 icon = Icons.Default.Search,

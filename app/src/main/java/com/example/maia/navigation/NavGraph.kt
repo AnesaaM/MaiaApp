@@ -9,9 +9,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.navArgument
 import com.example.maia.data.TokenManager
 import com.example.maia.network.RetrofitInstance
 import com.example.maia.ui.account.AccountScreen
@@ -150,8 +152,12 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             composable(Screen.Notifications.route) {
                 NotificationsScreen(navController = navController)
             }
-            composable(Screen.Menu.route) {
-                MenuScreen(navController = navController)
+            composable(
+                route = Screen.Menu.route,
+                arguments = listOf(navArgument("tab") { type = NavType.IntType; defaultValue = 0 })
+            ) { backStackEntry ->
+                val tab = backStackEntry.arguments?.getInt("tab") ?: 0
+                MenuScreen(navController = navController, initialTab = tab)
             }
             composable(Screen.AdminDashboard.route) {
                 AdminDashboardScreen(navController = navController, tokenManager = tokenManager)

@@ -14,7 +14,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 interface WomenApi {
-    @GET("gateway/women/CardsWomen/women")
+    @GET("gateway/women/CardsWomen")
     suspend fun getWomenCards(): List<WomenCard>
 
     @GET("gateway/women/CardsWomen/browse")

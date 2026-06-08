@@ -14,7 +14,9 @@ sealed class Screen(val route: String) {
     object Orders : Screen("orders")
     object Account : Screen("account")
     object Notifications : Screen("notifications")
-    object Menu : Screen("menu")
+    object Menu : Screen("menu?tab={tab}") {
+        fun createRoute(tab: Int = 0) = if (tab == 0) "menu" else "menu?tab=$tab"
+    }
     object Shop : Screen("shop")
     object Search : Screen("search")
     object Stores : Screen("stores")
