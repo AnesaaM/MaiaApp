@@ -52,8 +52,8 @@ fun CartScreen(cartViewModel: CartViewModel, wishlistViewModel: WishlistViewMode
     val wishlistLoading = wishlistViewModel.isLoading.value
 
     LaunchedEffect(Unit) {
-        cartViewModel.loadCart()
-        wishlistViewModel.loadWishlist()
+        if (cartViewModel.cartItems.value.isEmpty()) cartViewModel.loadCart()
+        if (wishlistViewModel.wishlistItems.value.isEmpty()) wishlistViewModel.loadWishlist()
     }
 
     LaunchedEffect(orderPlaced) {
