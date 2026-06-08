@@ -1,7 +1,5 @@
 package com.example.maia.ui.dashboard
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -47,51 +45,97 @@ fun DashboardLayout(
     onHomePage: () -> Unit,
     content: @Composable () -> Unit
 ) {
-    var expanded by remember { mutableStateOf(true) }
-    val sidebarWidth by animateDpAsState(
-        targetValue = if (expanded) 240.dp else 52.dp,
-        animationSpec = tween(250),
-        label = "sidebar"
-    )
+    var sidebarOpen by remember { mutableStateOf(false) }
 
-    Row(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize()) {
 
-        // ── Sidebar ───────────────────────────────────────────────────────────
-        Column(
-            Modifier
-                .width(sidebarWidth)
-                .fillMaxHeight()
-                .background(DashSidebar)
-        ) {
-            // ── Header: toggle button + brand ─────────────────────────────────
-            // Use only start padding so the button is never clipped in collapsed mode.
-            // When collapsed (52dp): 16dp start + 32dp button = 48dp — fits.
-            // When expanded (240dp): 16dp start + 32dp button + 12dp gap + text — fine.
+        // ── Full-screen content column ────────────────────────────────────────
+        Column(Modifier.fillMaxSize().statusBarsPadding()) {
+
+            // Top bar with hamburger button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(60.dp)
-                    .padding(start = 10.dp),
+                    .height(52.dp)
+                    .background(DashSidebar)
+                    .padding(horizontal = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                // Toggle button — plain cream background, always visible
                 Box(
                     modifier = Modifier
                         .size(32.dp)
                         .background(ToggleBg, RoundedCornerShape(6.dp))
-                        .clickable { expanded = !expanded },
+                        .clickable { sidebarOpen = true },
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = if (expanded) "<" else ">",
-                        color = ToggleText,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.ExtraBold
-                    )
+                    Text("≡", color = ToggleText, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 }
+                Text(
+                    "MAIA",
+                    color = DashSidebarText,
+                    fontSize = 18.sp,
+                    letterSpacing = 4.sp,
+                    fontFamily = FontFamily.Serif,
+                    fontStyle = FontStyle.Italic,
+                    fontWeight = FontWeight.Medium
+                )
+                Text(
+                    navItems.getOrNull(selectedIndex)?.label ?: "",
+                    color = DashSidebarSubText,
+                    fontSize = 10.sp,
+                    letterSpacing = 2.sp
+                )
+            }
 
-                if (expanded) {
+            // Main content — full width, full remaining height
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .background(DashBg)
+            ) {
+                content()
+            }
+        }
+
+        // ── Scrim (when sidebar is open) ──────────────────────────────────────
+        if (sidebarOpen) {
+            Box(
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.45f))
+                    .clickable { sidebarOpen = false }
+            )
+        }
+
+        // ── Sidebar overlay (when open) ───────────────────────────────────────
+        if (sidebarOpen) {
+            Column(
+                Modifier
+                    .width(260.dp)
+                    .fillMaxHeight()
+                    .statusBarsPadding()
+                    .background(DashSidebar)
+            ) {
+                // Header
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .padding(start = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .background(ToggleBg, RoundedCornerShape(6.dp))
+                            .clickable { sidebarOpen = false },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("<", color = ToggleText, fontSize = 15.sp, fontWeight = FontWeight.ExtraBold)
+                    }
                     Column {
                         Text(
                             "MAIA",
@@ -105,19 +149,20 @@ fun DashboardLayout(
                         Text(roleTitle, color = DashSidebarSubText, fontSize = 10.sp, letterSpacing = 2.sp)
                     }
                 }
-            }
 
-            Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.height(8.dp))
 
-            // ── Nav items ─────────────────────────────────────────────────────
-            navItems.forEachIndexed { i, item ->
-                val selected = i == selectedIndex
-                if (expanded) {
+                // Nav items
+                navItems.forEachIndexed { i, item ->
+                    val selected = i == selectedIndex
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
                             .background(if (selected) DashSidebarSelected else Color.Transparent)
-                            .clickable { onNavSelect(i) }
+                            .clickable {
+                                onNavSelect(i)
+                                sidebarOpen = false
+                            }
                             .padding(horizontal = 24.dp, vertical = 14.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
@@ -135,29 +180,11 @@ fun DashboardLayout(
                             fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal
                         )
                     }
-                } else {
-                    // Collapsed: icon only — tapping also expands sidebar
-                    Box(
-                        Modifier
-                            .fillMaxWidth()
-                            .background(if (selected) DashSidebarSelected else Color.Transparent)
-                            .clickable { onNavSelect(i); expanded = true }
-                            .padding(vertical = 11.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            item.icon,
-                            color = if (selected) DashSidebarText else DashSidebarSubText,
-                            fontSize = 12.sp
-                        )
-                    }
                 }
-            }
 
-            Spacer(Modifier.weight(1f))
+                Spacer(Modifier.weight(1f))
 
-            // ── Bottom: user info + logout (expanded only) ────────────────────
-            if (expanded) {
+                // Bottom: user info + buttons
                 Column(
                     Modifier.padding(start = 20.dp, end = 20.dp, bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(2.dp)
@@ -184,16 +211,6 @@ fun DashboardLayout(
                     ) { Text("HOME PAGE", fontSize = 9.sp, letterSpacing = 2.sp) }
                 }
             }
-        }
-
-        // ── Content area ──────────────────────────────────────────────────────
-        Column(
-            Modifier
-                .weight(1f)
-                .fillMaxHeight()
-                .background(DashBg)
-        ) {
-            content()
         }
     }
 }
