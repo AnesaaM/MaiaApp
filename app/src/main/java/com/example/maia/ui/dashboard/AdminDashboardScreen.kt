@@ -85,7 +85,7 @@ private fun fmtDate(raw: String?): String {
     return try {
         val d = raw.substring(0, 10).split("-")
         "${d[1].trimStart('0')}/${d[2].trimStart('0')}/${d[0]}"
-    } catch (ex: Exception) { raw.take(10) }
+    } catch (_: Exception) { raw.take(10) }
 }
 
 // ─── Screen entry point ───────────────────────────────────────────────────────
@@ -506,80 +506,80 @@ private fun AdminSalesTab(vm: AdminViewModel) {
 
         when (salesSection) {
             0 -> {
-                val list = vm.womenCards.filter { (it.discountPercent ?: 0) > 0 && (search.isBlank() || it.title.contains(search, true)) }
-                val hScroll = rememberScrollState()
-                val vScroll = rememberScrollState()
-                Box(Modifier.weight(1f).fillMaxWidth().border(1.dp, DashBorder, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp))) {
-                    Column(Modifier.horizontalScroll(hScroll).verticalScroll(vScroll)) {
-                        Row(Modifier.width(600.dp).background(TableHeaderBg).padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                val list = vm.womenCards.filter { search.isBlank() || it.title.contains(search, true) }
+                LazyColumn(
+                    Modifier.weight(1f).fillMaxWidth().border(1.dp, DashBorder, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp))
+                ) {
+                    stickyHeader {
+                        AdminHeaderRow {
                             Spacer(Modifier.width(72.dp))
                             AdminHeaderCell("TITLE", Modifier.weight(1f))
                             AdminHeaderCell("ORIGINAL PRICE", Modifier.width(130.dp))
                             AdminHeaderCell("SALE", Modifier.width(100.dp))
                             AdminHeaderCell("ACTIONS", Modifier.width(200.dp))
                         }
-                        list.forEach { p ->
-                            Row(Modifier.width(600.dp).background(DashCardBg).padding(horizontal = 12.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                                AdminThumb(p.imageUrl)
-                                AdminDataCell(Modifier.weight(1f)) { Text(p.title, fontSize = 13.sp, color = ActionDark, maxLines = 1) }
-                                AdminDataCell(Modifier.width(130.dp)) { Text("€${"%.2f".format(p.price)}", fontSize = 12.sp, color = DashSecText) }
-                                AdminDataCell(Modifier.width(100.dp)) { AdminSaleBadge("${p.discountPercent ?: 0}% OFF") }
-                                AdminDataCell(Modifier.width(200.dp)) { WomenSaleActions(p, vm) { e -> actionError = e } }
-                            }
-                            Box(Modifier.width(600.dp).height(1.dp).background(RowDivider))
+                    }
+                    items(list) { p ->
+                        AdminDataRow {
+                            AdminThumb(p.imageUrl)
+                            AdminDataCell(Modifier.weight(1f)) { Text(p.title, fontSize = 13.sp, color = ActionDark) }
+                            AdminDataCell(Modifier.width(130.dp)) { Text("€${"%.2f".format(p.price)}", fontSize = 12.sp, color = DashSecText) }
+                            AdminDataCell(Modifier.width(100.dp)) { if ((p.discountPercent ?: 0) > 0) AdminSaleBadge("${p.discountPercent}% OFF") }
+                            AdminDataCell(Modifier.width(200.dp)) { WomenSaleActions(p, vm) { e -> actionError = e } }
                         }
+                        Box(Modifier.fillMaxWidth().height(1.dp).background(RowDivider))
                     }
                 }
             }
             1 -> {
-                val list = vm.menCards.filter { (it.discountPercent ?: 0) > 0 && (search.isBlank() || it.title.contains(search, true)) }
-                val hScroll = rememberScrollState()
-                val vScroll = rememberScrollState()
-                Box(Modifier.weight(1f).fillMaxWidth().border(1.dp, DashBorder, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp))) {
-                    Column(Modifier.horizontalScroll(hScroll).verticalScroll(vScroll)) {
-                        Row(Modifier.width(600.dp).background(TableHeaderBg).padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                val list = vm.menCards.filter { search.isBlank() || it.title.contains(search, true) }
+                LazyColumn(
+                    Modifier.weight(1f).fillMaxWidth().border(1.dp, DashBorder, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp))
+                ) {
+                    stickyHeader {
+                        AdminHeaderRow {
                             Spacer(Modifier.width(72.dp))
                             AdminHeaderCell("TITLE", Modifier.weight(1f))
                             AdminHeaderCell("ORIGINAL PRICE", Modifier.width(130.dp))
                             AdminHeaderCell("SALE", Modifier.width(100.dp))
                             AdminHeaderCell("ACTIONS", Modifier.width(200.dp))
                         }
-                        list.forEach { p ->
-                            Row(Modifier.width(600.dp).background(DashCardBg).padding(horizontal = 12.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                                AdminThumb(p.imageUrl)
-                                AdminDataCell(Modifier.weight(1f)) { Text(p.title, fontSize = 13.sp, color = ActionDark, maxLines = 1) }
-                                AdminDataCell(Modifier.width(130.dp)) { Text("€${"%.2f".format(p.price)}", fontSize = 12.sp, color = DashSecText) }
-                                AdminDataCell(Modifier.width(100.dp)) { AdminSaleBadge("${p.discountPercent ?: 0}% OFF") }
-                                AdminDataCell(Modifier.width(200.dp)) { MenSaleActions(p, vm) { e -> actionError = e } }
-                            }
-                            Box(Modifier.width(600.dp).height(1.dp).background(RowDivider))
+                    }
+                    items(list) { p ->
+                        AdminDataRow {
+                            AdminThumb(p.imageUrl)
+                            AdminDataCell(Modifier.weight(1f)) { Text(p.title, fontSize = 13.sp, color = ActionDark) }
+                            AdminDataCell(Modifier.width(130.dp)) { Text("€${"%.2f".format(p.price)}", fontSize = 12.sp, color = DashSecText) }
+                            AdminDataCell(Modifier.width(100.dp)) { if ((p.discountPercent ?: 0) > 0) AdminSaleBadge("${p.discountPercent}% OFF") }
+                            AdminDataCell(Modifier.width(200.dp)) { MenSaleActions(p, vm) { e -> actionError = e } }
                         }
+                        Box(Modifier.fillMaxWidth().height(1.dp).background(RowDivider))
                     }
                 }
             }
             else -> {
-                val list = vm.kidsCards.filter { (it.discountPercent ?: 0) > 0 && (search.isBlank() || it.title.contains(search, true)) }
-                val hScroll = rememberScrollState()
-                val vScroll = rememberScrollState()
-                Box(Modifier.weight(1f).fillMaxWidth().border(1.dp, DashBorder, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp))) {
-                    Column(Modifier.horizontalScroll(hScroll).verticalScroll(vScroll)) {
-                        Row(Modifier.width(600.dp).background(TableHeaderBg).padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                val list = vm.kidsCards.filter { search.isBlank() || it.title.contains(search, true) }
+                LazyColumn(
+                    Modifier.weight(1f).fillMaxWidth().border(1.dp, DashBorder, RoundedCornerShape(6.dp)).clip(RoundedCornerShape(6.dp))
+                ) {
+                    stickyHeader {
+                        AdminHeaderRow {
                             Spacer(Modifier.width(72.dp))
                             AdminHeaderCell("TITLE", Modifier.weight(1f))
                             AdminHeaderCell("ORIGINAL PRICE", Modifier.width(130.dp))
                             AdminHeaderCell("SALE", Modifier.width(100.dp))
                             AdminHeaderCell("ACTIONS", Modifier.width(200.dp))
                         }
-                        list.forEach { p ->
-                            Row(Modifier.width(600.dp).background(DashCardBg).padding(horizontal = 12.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                                AdminThumb(p.imageUrl)
-                                AdminDataCell(Modifier.weight(1f)) { Text(p.title, fontSize = 13.sp, color = ActionDark, maxLines = 1) }
-                                AdminDataCell(Modifier.width(130.dp)) { Text("€${"%.2f".format(p.price)}", fontSize = 12.sp, color = DashSecText) }
-                                AdminDataCell(Modifier.width(100.dp)) { AdminSaleBadge("${p.discountPercent ?: 0}% OFF") }
-                                AdminDataCell(Modifier.width(200.dp)) { KidsSaleActions(p, vm) { e -> actionError = e } }
-                            }
-                            Box(Modifier.width(600.dp).height(1.dp).background(RowDivider))
+                    }
+                    items(list) { p ->
+                        AdminDataRow {
+                            AdminThumb(p.imageUrl)
+                            AdminDataCell(Modifier.weight(1f)) { Text(p.title, fontSize = 13.sp, color = ActionDark) }
+                            AdminDataCell(Modifier.width(130.dp)) { Text("€${"%.2f".format(p.price)}", fontSize = 12.sp, color = DashSecText) }
+                            AdminDataCell(Modifier.width(100.dp)) { if ((p.discountPercent ?: 0) > 0) AdminSaleBadge("${p.discountPercent}% OFF") }
+                            AdminDataCell(Modifier.width(200.dp)) { KidsSaleActions(p, vm) { e -> actionError = e } }
                         }
+                        Box(Modifier.fillMaxWidth().height(1.dp).background(RowDivider))
                     }
                 }
             }
