@@ -48,31 +48,31 @@ class AdminViewModel : ViewModel() {
                 } catch (e: Exception) {
                     error = "Users API: ${e.message}"
                 }
-                try { roles = RetrofitInstance.adminApi.getRoles() } catch (_: Exception) {}
+                try { roles = RetrofitInstance.adminApi.getRoles() } catch (ex: Exception) {}
 
                 // Women products
                 try {
                     womenCards = RetrofitInstance.womenManagerApi.getAllCards()
-                } catch (_: Exception) {
+                } catch (ex: Exception) {
                     womenCards = emptyList()
                 }
                 // Men products
                 try {
                     menCards = RetrofitInstance.menManagerApi.getAllCards()
-                } catch (_: Exception) {
+                } catch (ex: Exception) {
                     menCards = emptyList()
                 }
                 // Kids — backend has an issue; load silently, show empty on failure
                 try {
                     kidsCards = RetrofitInstance.kidsApi.getKidsCards()
-                } catch (_: Exception) {
+                } catch (ex: Exception) {
                     kidsCards = emptyList()
                 }
 
                 // Categories (non-critical)
-                try { womenCategories = RetrofitInstance.womenManagerApi.getCategories() } catch (_: Exception) {}
-                try { menCategories   = RetrofitInstance.menManagerApi.getCategories()   } catch (_: Exception) {}
-                try { orders = RetrofitInstance.orderServiceApi.getAllOrders() } catch (_: Exception) {}
+                try { womenCategories = RetrofitInstance.womenManagerApi.getCategories() } catch (ex: Exception) {}
+                try { menCategories   = RetrofitInstance.menManagerApi.getCategories()   } catch (ex: Exception) {}
+                try { orders = RetrofitInstance.orderServiceApi.getAllOrders() } catch (ex: Exception) {}
             } finally {
                 isLoading = false
             }

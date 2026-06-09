@@ -215,13 +215,22 @@ private fun ShoppingBagContent(
                 }
             }
             Column(modifier = Modifier.padding(horizontal = 24.dp, vertical = 16.dp)) {
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("SUBTOTAL", fontSize = 10.sp, letterSpacing = 2.sp, color = MaiaTextSecondary)
+                    Text("${String.format("%.2f", total)} EUR", fontSize = 12.sp, color = MaiaText)
+                }
+                Spacer(Modifier.height(4.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("SHIPPING", fontSize = 10.sp, letterSpacing = 2.sp, color = MaiaTextSecondary)
+                    Text("4.99 EUR", fontSize = 12.sp, color = MaiaText)
+                }
+                Spacer(Modifier.height(8.dp))
+                HorizontalDivider(color = Color(0xFFEDE8E3), thickness = 0.5.dp)
+                Spacer(Modifier.height(8.dp))
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text("TOTAL", fontSize = 10.sp, letterSpacing = 2.sp, color = MaiaTextSecondary)
                     Text(
-                        "${String.format("%.0f", total)} EUR",
+                        "${String.format("%.2f", total + 4.99)} EUR",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.SemiBold,
                         color = MaiaText
@@ -254,7 +263,13 @@ private fun CartItemRow(item: CartItem, onRemove: () -> Unit, onSave: () -> Unit
         Column(modifier = Modifier.weight(1f)) {
             Text(item.productName.ifEmpty { "Product #${item.productId}" }, fontSize = 12.sp, letterSpacing = 0.5.sp, color = MaiaText)
             Spacer(Modifier.height(4.dp))
-            Text("Qty ${item.quantity}", fontSize = 11.sp, color = MaiaTextSecondary)
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("Qty ${item.quantity}", fontSize = 11.sp, color = MaiaTextSecondary)
+                if (!item.size.isNullOrEmpty()) {
+                    Text("·", fontSize = 11.sp, color = MaiaTextSecondary)
+                    Text("Size ${item.size}", fontSize = 11.sp, color = MaiaTextSecondary)
+                }
+            }
             if (item.price > 0) {
                 Spacer(Modifier.height(4.dp))
                 Text("${String.format("%.0f", item.price)} EUR", fontSize = 12.sp, color = MaiaText)

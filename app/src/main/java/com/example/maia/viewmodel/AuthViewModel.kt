@@ -10,6 +10,8 @@ import com.example.maia.model.auth.LoginRequest
 import com.example.maia.model.auth.RegisterRequest
 import com.example.maia.network.RetrofitInstance
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import retrofit2.HttpException
 
 sealed class AuthState {
     object Idle : AuthState()
@@ -34,7 +36,6 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
             loginState.value = AuthState.Loading
             try {
                 val response = RetrofitInstance.authApi.login(LoginRequest(email, password))
-                // If backend returns JWT in response body, store and use as Bearer header
                 val jwt = response.token ?: response.accessToken
                 if (jwt != null) {
                     RetrofitInstance.setToken(jwt)
@@ -44,8 +45,10 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
                 tokenManager.saveUsername("${response.firstName} ${response.lastName}")
                 tokenManager.saveRole(response.role)
                 loginState.value = AuthState.Success
+            } catch (e: HttpException) {
+                loginState.value = AuthState.Error(parseError(e) ?: "Invalid email or password.")
             } catch (e: Exception) {
-                loginState.value = AuthState.Error(e.message ?: "Login failed")
+                loginState.value = AuthState.Error("Could not connect to server.")
             }
         }
     }
@@ -56,8 +59,10 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
             try {
                 RetrofitInstance.authApi.register(RegisterRequest(firstName, lastName, email, password))
                 registerState.value = AuthState.Success
+            } catch (e: HttpException) {
+                registerState.value = AuthState.Error(parseError(e) ?: "Registration failed.")
             } catch (e: Exception) {
-                registerState.value = AuthState.Error(e.message ?: "Registration failed")
+                registerState.value = AuthState.Error("Could not connect to server.")
             }
         }
     }
@@ -68,8 +73,10 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
             try {
                 RetrofitInstance.authApi.forgotPassword(ForgotPasswordRequest(email))
                 resendState.value = AuthState.Success
+            } catch (e: HttpException) {
+                resendState.value = AuthState.Error(parseError(e) ?: "Resend failed.")
             } catch (e: Exception) {
-                resendState.value = AuthState.Error(e.message ?: "Resend failed")
+                resendState.value = AuthState.Error("Could not connect to server.")
             }
         }
     }
@@ -80,15 +87,24 @@ class AuthViewModel(private val tokenManager: TokenManager) : ViewModel() {
             try {
                 RetrofitInstance.authApi.forgotPassword(ForgotPasswordRequest(email))
                 forgotPasswordState.value = AuthState.Success
+            } catch (e: HttpException) {
+                forgotPasswordState.value = AuthState.Error(parseError(e) ?: "Request failed.")
             } catch (e: Exception) {
-                forgotPasswordState.value = AuthState.Error(e.message ?: "Request failed")
+                forgotPasswordState.value = AuthState.Error("Could not connect to server.")
             }
         }
     }
 
+    private fun parseError(e: HttpException): String? {
+        return try {
+            val body = e.response()?.errorBody()?.string() ?: return null
+            JSONObject(body).optString("message").takeIf { it.isNotEmpty() }
+        } catch (ex: Exception) { null }
+    }
+
     fun logout() {
         viewModelScope.launch {
-            try { RetrofitInstance.authApi.logout() } catch (_: Exception) { }
+            try { RetrofitInstance.authApi.logout() } catch (ex: Exception) { }
             RetrofitInstance.clearSession()
             tokenManager.clear()
             loginState.value = AuthState.Idle

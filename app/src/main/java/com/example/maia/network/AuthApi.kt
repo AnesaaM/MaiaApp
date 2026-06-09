@@ -5,9 +5,12 @@ import com.example.maia.model.auth.ForgotPasswordRequest
 import com.example.maia.model.auth.LoginRequest
 import com.example.maia.model.auth.RegisterRequest
 import com.example.maia.model.auth.ResetPasswordRequest
+import com.example.maia.model.auth.UpdateMeRequest
+import com.example.maia.model.auth.UpdateMeResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.PUT
 
 interface AuthApi {
     @POST("gateway/auth/auth/login")
@@ -24,4 +27,7 @@ interface AuthApi {
 
     @GET("gateway/auth/auth/me")
     suspend fun getMe(): Any
+
+    @PUT("gateway/auth/auth/me")
+    suspend fun updateMe(@Body request: UpdateMeRequest): UpdateMeResponse
 }

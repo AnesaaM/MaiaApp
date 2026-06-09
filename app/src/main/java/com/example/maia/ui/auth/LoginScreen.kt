@@ -89,7 +89,8 @@ fun LoginScreen(navController: NavController, tokenManager: TokenManager) {
                 label = "Email",
                 value = email,
                 onValueChange = { email = it },
-                keyboardType = KeyboardType.Email
+                keyboardType = KeyboardType.Email,
+                placeholder = "your@email.com"
             )
 
             Spacer(Modifier.height(12.dp))
@@ -99,6 +100,7 @@ fun LoginScreen(navController: NavController, tokenManager: TokenManager) {
                 value = password,
                 onValueChange = { password = it },
                 keyboardType = KeyboardType.Password,
+                placeholder = "••••••••",
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {

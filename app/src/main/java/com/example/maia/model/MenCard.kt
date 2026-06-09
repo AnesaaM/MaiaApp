@@ -6,7 +6,7 @@ data class MenCard(
     val imageUrl: String,
     val price: Double,
     val description: String = "",
-    val color: String = "",
+    val color: String? = null,
     val menCategoryId: Int = 0,
     val menCategoryName: String = "",
     val discountPercent: Int? = null

@@ -1,31 +1,29 @@
 package com.example.maia.ui.auth
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.maia.data.TokenManager
-import com.example.maia.ui.components.BlobHeader
-import com.example.maia.ui.components.MaiaBackground
-import com.example.maia.ui.components.MaiaButton
 import com.example.maia.ui.components.MaiaText
-import com.example.maia.ui.components.MaiaTextField
 import com.example.maia.ui.components.MaiaTextSecondary
 import com.example.maia.viewmodel.AuthState
 import com.example.maia.viewmodel.AuthViewModel
@@ -37,11 +35,10 @@ fun ForgotPasswordScreenPreview() {
     val context = LocalContext.current
     ForgotPasswordScreen(
         navController = rememberNavController(),
-        tokenManager = com.example.maia.data.TokenManager(context)
+        tokenManager = TokenManager(context)
     )
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ForgotPasswordScreen(navController: NavController, tokenManager: TokenManager) {
     val vm: AuthViewModel = viewModel(factory = AuthViewModelFactory(tokenManager))
@@ -49,92 +46,135 @@ fun ForgotPasswordScreen(navController: NavController, tokenManager: TokenManage
 
     var email by remember { mutableStateOf("") }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaiaBackground)
+            .background(Color.White),
+        contentAlignment = Alignment.Center
     ) {
-        BlobHeader()
-
-        Spacer(Modifier.height(16.dp))
-
-        Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
-            IconButton(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.padding(start = 0.dp)
-            ) {
-                Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = MaiaText)
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 40.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                "MAIA",
+                fontSize = 44.sp,
+                fontFamily = FontFamily.Serif,
+                fontStyle = FontStyle.Italic,
+                fontWeight = FontWeight.Normal,
+                color = MaiaText,
+                letterSpacing = 3.sp
+            )
 
             Spacer(Modifier.height(8.dp))
 
             Text(
                 "FORGOT PASSWORD",
                 fontSize = 11.sp,
-                letterSpacing = 2.sp,
+                letterSpacing = 3.sp,
                 color = MaiaTextSecondary,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Normal
             )
 
-            Spacer(Modifier.height(12.dp))
-
-            Text(
-                "Enter your email address and we'll send you instructions to reset your password.",
-                fontSize = 13.sp,
-                color = MaiaTextSecondary,
-                lineHeight = 20.sp
-            )
-
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(32.dp))
 
             if (state is AuthState.Success) {
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFFF0EDE8)),
-                    shape = RoundedCornerShape(6.dp),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
+                Text(
+                    "Reset instructions sent!\nCheck your email.",
+                    fontSize = 13.sp,
+                    color = MaiaText,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp
+                )
+                Spacer(Modifier.height(24.dp))
+                Text(
+                    "← Back to Login",
+                    fontSize = 13.sp,
+                    color = MaiaText,
+                    modifier = Modifier.clickable { navController.popBackStack() }
+                )
+            } else {
+                Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
-                        "Reset instructions sent! Check your email.",
-                        modifier = Modifier.padding(16.dp),
-                        color = MaiaText,
-                        fontSize = 13.sp
+                        "EMAIL",
+                        fontSize = 10.sp,
+                        letterSpacing = 1.5.sp,
+                        color = MaiaTextSecondary,
+                        fontWeight = FontWeight.Normal
+                    )
+                    Spacer(Modifier.height(4.dp))
+                    TextField(
+                        value = email,
+                        onValueChange = { email = it },
+                        placeholder = {
+                            Text(
+                                "email@example.com",
+                                fontSize = 13.sp,
+                                color = Color(0xFFBBABA4)
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                        colors = TextFieldDefaults.colors(
+                            unfocusedIndicatorColor = Color(0xFFCCC0BB),
+                            focusedIndicatorColor = MaiaText,
+                            unfocusedContainerColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedTextColor = MaiaText,
+                            focusedTextColor = MaiaText
+                        ),
+                        textStyle = LocalTextStyle.current.copy(fontSize = 13.sp)
                     )
                 }
-                Spacer(Modifier.height(16.dp))
-                TextButton(
-                    onClick = { navController.popBackStack() },
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text("Back to Login", color = MaiaText, fontSize = 13.sp)
-                }
-            } else {
-                MaiaTextField(
-                    label = "EMAIL",
-                    value = email,
-                    onValueChange = { email = it },
-                    keyboardType = KeyboardType.Email
-                )
-
-                Spacer(Modifier.height(8.dp))
 
                 if (state is AuthState.Error) {
-                    Text(state.message, color = MaterialTheme.colorScheme.error, fontSize = 12.sp, modifier = Modifier.padding(bottom = 8.dp))
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        state.message,
+                        color = MaterialTheme.colorScheme.error,
+                        fontSize = 11.sp
+                    )
                 }
 
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(24.dp))
 
                 Button(
                     onClick = { vm.forgotPassword(email) },
-                    modifier = Modifier.fillMaxWidth().height(48.dp),
+                    modifier = Modifier.fillMaxWidth().height(50.dp),
                     enabled = state !is AuthState.Loading && email.isNotBlank(),
-                    shape = RoundedCornerShape(6.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaiaButton)
+                    shape = RoundedCornerShape(4.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaiaText,
+                        contentColor = Color.White
+                    )
                 ) {
                     if (state is AuthState.Loading)
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp
+                        )
                     else
-                        Text("SEND RESET LINK", letterSpacing = 1.5.sp, fontSize = 12.sp)
+                        Text(
+                            "SEND RESET LINK",
+                            letterSpacing = 2.sp,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Normal
+                        )
                 }
+
+                Spacer(Modifier.height(20.dp))
+
+                Text(
+                    "← Back to Login",
+                    fontSize = 12.sp,
+                    color = MaiaText,
+                    letterSpacing = 0.5.sp,
+                    modifier = Modifier.clickable { navController.popBackStack() }
+                )
             }
         }
     }

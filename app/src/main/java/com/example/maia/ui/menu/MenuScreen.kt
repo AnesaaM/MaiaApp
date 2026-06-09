@@ -40,7 +40,7 @@ private val manCategories = listOf(
     "OUTERWEAR", "SWIMWEAR", "FOOTWEAR", "ACCESSORIES"
 )
 private val kidsCategories = listOf(
-    "VIEW ALL", "T-SHIRTS", "DRESSES", "TOPS", "JEANS", "SHORTS"
+    "VIEW ALL", "BABY", "GIRLS", "BOYS", "SWIMWEAR", "FOOTWEAR", "ACCESSORIES", "SALE"
 )
 
 // categoryId = 0 → VIEW ALL (no filter)
@@ -53,8 +53,12 @@ private val manCategoryIds = mapOf(
     "VIEW ALL" to 0, "TOPS" to 1, "BOTTOMS" to 2, "SUITS & FORMALWEAR" to 3,
     "OUTERWEAR" to 4, "SWIMWEAR" to 5, "FOOTWEAR" to 6, "ACCESSORIES" to 7
 )
-// SALE: womanCategoryId=9, menCategoryId=8, kids=0
-private val saleCategoryIds = listOf(9, 8, 0)
+private val kidsCategoryIds = mapOf(
+    "VIEW ALL" to 0, "BABY" to 1, "GIRLS" to 2, "BOYS" to 3,
+    "SWIMWEAR" to 5, "FOOTWEAR" to 6, "ACCESSORIES" to 7, "SALE" to 8
+)
+// SALE: womanCategoryId=9, menCategoryId=8, kidsCategoryId=8
+private val saleCategoryIds = listOf(9, 8, 8)
 
 private val tabs = listOf("WOMAN", "MAN", "KIDS")
 
@@ -78,7 +82,7 @@ fun MenuScreen(navController: NavController, initialTab: Int = 0) {
     val categoryIdMap = when (selectedTab) {
         0 -> womanCategoryIds
         1 -> manCategoryIds
-        else -> emptyMap()
+        else -> kidsCategoryIds
     }
 
     Column(
@@ -247,7 +251,7 @@ fun MenuScreen(navController: NavController, initialTab: Int = 0) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(32.dp)
-                    .clickable { }
+                    .clickable { navController.navigate("search") }
             )
         }
 

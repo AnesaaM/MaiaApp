@@ -53,12 +53,17 @@ class CartViewModel : ViewModel() {
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
+        val effectivePrice = if ((product.discountPercent ?: 0) > 0)
+            product.price * (1 - product.discountPercent!! / 100.0)
+        else
+            product.price
+
         val placeholder = CartItem(
             id = -product.id,
             productId = product.id,
             productName = product.title,
             imageUrl = product.imageUrl,
-            price = product.price,
+            price = effectivePrice,
             quantity = 1,
             size = size
         )
@@ -73,7 +78,7 @@ class CartViewModel : ViewModel() {
                         productSource = productSource,
                         productName = product.title,
                         imageUrl = product.imageUrl,
-                        price = product.price,
+                        price = effectivePrice,
                         size = size
                     )
                 )
@@ -110,19 +115,52 @@ class CartViewModel : ViewModel() {
         }
     }
 
-    fun placeOrder(email: String = "", name: String = "") {
+    fun placeOrder(
+        email: String = "",
+        name: String = "",
+        address: String = "",
+        city: String = "",
+        postalCode: String = "",
+        phone: String = "",
+        paymentMethod: String = "cash"
+    ) {
         val itemsSnapshot = cartItems.value.toList()
+        val totalWithShipping = totalPrice + 4.99
+        
         viewModelScope.launch {
             isLoading.value = true
             try {
-                val order = RetrofitInstance.orderServiceApi.placeOrder(JsonObject())
+                val body = JsonObject().apply {
+                    addProperty("email", email)
+                    addProperty("fullName", name)
+                    addProperty("address", address)
+                    addProperty("city", city)
+                    addProperty("postalCode", postalCode)
+                    addProperty("phone", phone)
+                    addProperty("paymentMethod", paymentMethod)
+                    addProperty("totalAmount", totalWithShipping)
+                }
+                
+                val order = RetrofitInstance.orderServiceApi.placeOrder(body)
                 placedOrder.value = order
                 cartItems.value = emptyList()
                 orderPlaced.value = true
+
                 if (email.isNotBlank()) {
                     val orderRef = "MAIA-${order.id.toString().padStart(6, '0')}"
                     launch {
-                        EmailService.sendInvoice(email, name, orderRef, order.totalAmount, itemsSnapshot)
+                        EmailService.sendInvoice(
+                            toEmail = email,
+                            userName = name,
+                            orderRef = orderRef,
+                            total = order.totalAmount,
+                            items = itemsSnapshot,
+                            address = address,
+                            city = city,
+                            postalCode = postalCode,
+                            phone = phone,
+                            paymentMethod = paymentMethod
+                        )
                     }
                 }
             } catch (e: Exception) {

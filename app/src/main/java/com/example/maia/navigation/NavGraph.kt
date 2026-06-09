@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import com.example.maia.data.TokenManager
 import com.example.maia.network.RetrofitInstance
 import com.example.maia.ui.account.AccountScreen
+import com.example.maia.ui.account.ContactDataScreen
 import com.example.maia.ui.dashboard.AdminDashboardScreen
 import com.example.maia.ui.dashboard.MenManagerDashboardScreen
 import com.example.maia.ui.dashboard.SalesManagerDashboardScreen
@@ -162,7 +163,10 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
                 )
             }
             composable(Screen.Orders.route) {
-                OrderHistoryScreen()
+                OrderHistoryScreen(navController = navController)
+            }
+            composable(Screen.ContactData.route) {
+                ContactDataScreen(navController = navController, tokenManager = tokenManager)
             }
             composable(Screen.Wishlist.route) {
                 WishlistScreen(
@@ -179,31 +183,6 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             ) { backStackEntry ->
                 val tab = backStackEntry.arguments?.getInt("tab") ?: 0
                 MenuScreen(navController = navController, initialTab = tab)
-            }
-            composable(Screen.AdminDashboard.route) {
-                AdminDashboardScreen(navController = navController, tokenManager = tokenManager)
-            }
-            composable(Screen.SalesManagerDashboard.route) {
-                SalesManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
-            }
-            composable(Screen.WomenManagerDashboard.route) {
-                WomenManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
-            }
-            composable(Screen.MenManagerDashboard.route) {
-                MenManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
-            }
-            composable(Screen.KidsManagerDashboard.route) {
-                KidsManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
-            }
-            composable(Screen.Search.route) {
-                SearchScreen(
-                    navController = navController,
-                    cartViewModel = cartViewModel,
-                    wishlistViewModel = wishlistViewModel
-                )
-            }
-            composable(Screen.Stores.route) {
-                StoresScreen(navController = navController)
             }
             composable(Screen.AdminDashboard.route) {
                 AdminDashboardScreen(navController = navController, tokenManager = tokenManager)
