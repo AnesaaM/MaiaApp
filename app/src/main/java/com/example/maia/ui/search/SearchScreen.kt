@@ -241,7 +241,6 @@ fun SearchScreen(
                     .padding(horizontal = 16.dp, vertical = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(32.dp)
             ) {
-                // COLOR
                 Column {
                     Text("COLOR", fontSize = 9.sp, letterSpacing = 2.sp, color = MaiaTextSecondary)
                     Spacer(Modifier.height(8.dp))
@@ -265,7 +264,6 @@ fun SearchScreen(
                 }
             }
 
-            // CATEGORY chips
             Row(
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -322,7 +320,6 @@ fun SearchScreen(
             fontSize = 10.sp, letterSpacing = 2.sp, color = MaiaTextSecondary
         )
 
-        // Product grid
         if (isLoading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = MaiaText, strokeWidth = 1.5.dp)

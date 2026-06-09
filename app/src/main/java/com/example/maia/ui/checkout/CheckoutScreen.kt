@@ -66,7 +66,6 @@ fun CheckoutScreen(navController: NavController, cartViewModel: CartViewModel, t
             .fillMaxSize()
             .background(MaiaBackground)
     ) {
-        // Header
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -116,7 +115,6 @@ fun CheckoutScreen(navController: NavController, cartViewModel: CartViewModel, t
 
             Spacer(Modifier.height(8.dp))
 
-            // Order summary
             SectionLabel("ORDER SUMMARY")
             val total = cartViewModel.totalPrice
             val count = cartViewModel.itemCount
