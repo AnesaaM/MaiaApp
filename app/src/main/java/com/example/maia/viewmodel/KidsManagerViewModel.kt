@@ -40,6 +40,15 @@ class KidsManagerViewModel : ViewModel() {
         }
     }
 
+    fun updateCard(id: Int, title: String, price: Double, imageUrl: String, description: String, onDone: (String?) -> Unit) {
+        viewModelScope.launch {
+            try {
+                RetrofitInstance.kidsApi.updateKidsCard(id, mapOf("title" to title, "price" to price, "imageUrl" to imageUrl, "description" to description))
+                loadAll(); onDone(null)
+            } catch (e: Exception) { onDone(e.message ?: "Failed") }
+        }
+    }
+
     fun deleteCard(id: Int, onDone: (String?) -> Unit) {
         viewModelScope.launch {
             try { RetrofitInstance.kidsApi.deleteKidsCard(id); loadAll(); onDone(null) }
