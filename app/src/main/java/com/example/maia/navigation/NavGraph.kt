@@ -17,6 +17,7 @@ import androidx.navigation.navArgument
 import com.example.maia.data.TokenManager
 import com.example.maia.network.RetrofitInstance
 import com.example.maia.ui.account.AccountScreen
+import com.example.maia.ui.account.ContactDataScreen
 import com.example.maia.ui.dashboard.AdminDashboardScreen
 import com.example.maia.ui.dashboard.MenManagerDashboardScreen
 import com.example.maia.ui.dashboard.SalesManagerDashboardScreen
@@ -162,7 +163,10 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
                 )
             }
             composable(Screen.Orders.route) {
-                OrderHistoryScreen()
+                OrderHistoryScreen(navController = navController)
+            }
+            composable(Screen.ContactData.route) {
+                ContactDataScreen(navController = navController, tokenManager = tokenManager)
             }
             composable(Screen.Wishlist.route) {
                 WishlistScreen(

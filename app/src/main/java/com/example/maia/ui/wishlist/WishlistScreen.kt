@@ -1,86 +1,181 @@
 package com.example.maia.ui.wishlist
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.example.maia.model.Product
 import com.example.maia.model.wishlist.WishlistItem
+import com.example.maia.ui.components.MaiaBackground
+import com.example.maia.ui.components.MaiaBlob
+import com.example.maia.ui.components.MaiaBorder
+import com.example.maia.ui.components.MaiaButton
+import com.example.maia.ui.components.MaiaText
+import com.example.maia.ui.components.MaiaTextSecondary
+import com.example.maia.ui.components.SizePickerSheet
 import com.example.maia.util.NotificationHelper
-import androidx.compose.ui.tooling.preview.Preview
 import com.example.maia.viewmodel.CartViewModel
 import com.example.maia.viewmodel.WishlistViewModel
-
-private val Purple = Color(0xFF6C5CE7)
 
 @Preview(showBackground = true, name = "Wishlist Screen")
 @Composable
 fun WishlistScreenPreview() {
-    WishlistScreen(
-        wishlistViewModel = WishlistViewModel(),
-        cartViewModel = CartViewModel()
-    )
+    WishlistScreen(wishlistViewModel = WishlistViewModel(), cartViewModel = CartViewModel())
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WishlistScreen(wishlistViewModel: WishlistViewModel, cartViewModel: CartViewModel) {
     val context = LocalContext.current
     val items = wishlistViewModel.wishlistItems.value
     val isLoading = wishlistViewModel.isLoading.value
+    val blobColor = MaiaBlob
 
     LaunchedEffect(Unit) { wishlistViewModel.loadWishlist() }
 
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("My Wishlist", fontWeight = FontWeight.Bold) }) }
-    ) { padding ->
-        Box(modifier = Modifier.fillMaxSize().padding(padding)) {
-            when {
-                isLoading -> CircularProgressIndicator(modifier = Modifier.align(Alignment.Center), color = Purple)
-                items.isEmpty() -> Column(
-                    modifier = Modifier.align(Alignment.Center),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text("Your wishlist is empty", fontSize = 18.sp, color = Color.Gray)
-                    Text("Tap the heart icon on products to save them", fontSize = 14.sp, color = Color.LightGray)
-                }
-                else -> LazyColumn(
-                    contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(items, key = { it.id }) { item ->
-                        WishlistItemRow(
-                            item = item,
-                            onRemove = { wishlistViewModel.removeFromWishlist(item.id) },
-                            onAddToCart = {
-                                val name = item.productName ?: return@WishlistItemRow
-                                val fakeProduct = com.example.maia.model.Product(
-                                    id = item.productId,
-                                    title = name,
-                                    imageUrl = item.productImage ?: "",
-                                    price = item.price ?: 0.0
-                                )
-                                cartViewModel.addToCart(
-                                    product = fakeProduct,
-                                    productSource = "women",
-                                    onSuccess = { NotificationHelper.showCartNotification(context, name) }
-                                )
-                            }
-                        )
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaiaBackground)
+    ) {
+        // Blob header
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .drawBehind {
+                    val w = size.width; val h = size.height
+                    val path = Path().apply {
+                        moveTo(0f, 0f); lineTo(w, 0f)
+                        lineTo(w, h * 0.68f)
+                        cubicTo(w * 0.82f, h * 1.05f, w * 0.60f, h * 0.72f, w * 0.44f, h * 0.90f)
+                        cubicTo(w * 0.28f, h * 1.08f, w * 0.12f, h * 0.78f, 0f, h * 0.85f)
+                        close()
                     }
+                    drawPath(path, blobColor)
+                }
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(Modifier.weight(1f))
+                Text(
+                    "MAIA",
+                    fontSize = 18.sp,
+                    fontFamily = FontFamily.Serif,
+                    fontStyle = FontStyle.Italic,
+                    fontWeight = FontWeight.Medium,
+                    color = MaiaText,
+                    letterSpacing = 2.sp
+                )
+                Spacer(Modifier.weight(1f))
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                "FAVOURITES",
+                fontSize = 11.sp,
+                letterSpacing = 3.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaiaTextSecondary
+            )
+            if (items.isNotEmpty()) {
+                Text(
+                    "${items.size} item${if (items.size != 1) "s" else ""}",
+                    fontSize = 10.sp,
+                    letterSpacing = 1.sp,
+                    color = MaiaTextSecondary
+                )
+            }
+        }
+
+        Spacer(Modifier.height(16.dp))
+
+        when {
+            isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = MaiaText, strokeWidth = 1.5.dp)
+            }
+            items.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        tint = MaiaBlob,
+                        modifier = Modifier.size(40.dp)
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    Text(
+                        "Your favourites is empty",
+                        fontSize = 18.sp,
+                        fontFamily = FontFamily.Serif,
+                        fontWeight = FontWeight.Light,
+                        color = MaiaText,
+                        letterSpacing = 1.sp
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        "Tap ♡ on any product to save it here",
+                        fontSize = 11.sp,
+                        letterSpacing = 0.5.sp,
+                        color = MaiaTextSecondary
+                    )
+                }
+            }
+            else -> LazyColumn(
+                contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp)
+            ) {
+                items(items, key = { it.id }) { item ->
+                    WishlistRow(
+                        item = item,
+                        onRemove = { wishlistViewModel.removeFromWishlist(item.id) },
+                        onAddToCart = { size ->
+                            val name = item.productName ?: return@WishlistRow
+                            val product = Product(
+                                id = item.productId,
+                                title = name,
+                                imageUrl = item.productImage ?: "",
+                                price = item.price ?: 0.0
+                            )
+                            cartViewModel.addToCart(
+                                product = product,
+                                productSource = "women",
+                                size = size,
+                                onSuccess = { NotificationHelper.showCartNotification(context, name) }
+                            )
+                        }
+                    )
+                    HorizontalDivider(color = MaiaBorder, thickness = 0.5.dp)
                 }
             }
         }
@@ -88,53 +183,74 @@ fun WishlistScreen(wishlistViewModel: WishlistViewModel, cartViewModel: CartView
 }
 
 @Composable
-private fun WishlistItemRow(
+private fun WishlistRow(
     item: WishlistItem,
     onRemove: () -> Unit,
-    onAddToCart: () -> Unit
+    onAddToCart: (String) -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(4.dp)
+    var showSizePicker by remember { mutableStateOf(false) }
+
+    if (showSizePicker) {
+        SizePickerSheet(
+            productName = item.productName ?: "",
+            onDismiss = { showSizePicker = false },
+            onAddToCart = { size -> onAddToCart(size); showSizePicker = false }
+        )
+    }
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 16.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            AsyncImage(
-                model = item.productImage,
-                contentDescription = item.productName,
-                modifier = Modifier.size(80.dp),
-                contentScale = ContentScale.Crop
+        AsyncImage(
+            model = item.productImage,
+            contentDescription = item.productName,
+            modifier = Modifier
+                .size(80.dp)
+                .background(Color(0xFFEDE8E3)),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(Modifier.width(14.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                item.productName ?: "Product #${item.productId}",
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Normal,
+                color = MaiaText,
+                maxLines = 2,
+                lineHeight = 18.sp
             )
-            Spacer(Modifier.width(12.dp))
-            Column(modifier = Modifier.weight(1f)) {
+            if (item.price != null) {
+                Spacer(Modifier.height(4.dp))
                 Text(
-                    item.productName ?: "Product #${item.productId}",
-                    fontWeight = FontWeight.SemiBold,
-                    maxLines = 2
+                    "€${"%.0f".format(item.price)}",
+                    fontSize = 12.sp,
+                    color = MaiaTextSecondary
                 )
-                if (item.price != null) {
-                    Spacer(Modifier.height(4.dp))
-                    Text("€ ${String.format("%.2f", item.price)}", color = Purple, fontWeight = FontWeight.Bold)
-                }
-                Spacer(Modifier.height(8.dp))
-                Button(
-                    onClick = onAddToCart,
-                    colors = ButtonDefaults.buttonColors(containerColor = Purple),
-                    shape = RoundedCornerShape(8.dp),
-                    modifier = Modifier.height(32.dp),
-                    contentPadding = PaddingValues(horizontal = 12.dp)
-                ) {
-                    Icon(Icons.Default.ShoppingCart, contentDescription = null, modifier = Modifier.size(14.dp))
-                    Spacer(Modifier.width(4.dp))
-                    Text("Add to Cart", fontSize = 12.sp)
-                }
             }
-            IconButton(onClick = onRemove) {
-                Icon(Icons.Default.Delete, contentDescription = "Remove", tint = Color.Red)
+            Spacer(Modifier.height(10.dp))
+            TextButton(
+                onClick = { showSizePicker = true },
+                contentPadding = PaddingValues(0.dp),
+                modifier = Modifier.height(24.dp)
+            ) {
+                Text(
+                    "+ ADD TO BAG",
+                    fontSize = 10.sp,
+                    letterSpacing = 1.5.sp,
+                    color = MaiaText,
+                    fontWeight = FontWeight.Medium
+                )
             }
+        }
+        TextButton(
+            onClick = onRemove,
+            contentPadding = PaddingValues(0.dp),
+            modifier = Modifier.size(40.dp)
+        ) {
+            Text("✕", fontSize = 14.sp, color = MaiaTextSecondary)
         }
     }
 }

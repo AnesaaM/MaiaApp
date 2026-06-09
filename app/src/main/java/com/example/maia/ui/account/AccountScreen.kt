@@ -64,7 +64,7 @@ fun AccountScreen(navController: NavController, tokenManager: TokenManager) {
 
     val menuItems = buildList {
         add("PURCHASES" to Screen.Orders.route)
-        add("CONTACT DATA" to null)
+        add("CONTACT DATA" to Screen.ContactData.route)
         add("STORES" to Screen.Stores.route)
         add("NOTIFICATIONS" to Screen.Notifications.route)
         if (dashboardRoute != null) add("DASHBOARD" to dashboardRoute)

@@ -208,7 +208,17 @@ fun CheckoutScreen(navController: NavController, cartViewModel: CartViewModel, t
             }
 
             Button(
-                onClick = { if (formValid) cartViewModel.placeOrder(email, fullName) },
+                onClick = {
+                    if (formValid) cartViewModel.placeOrder(
+                        email = email,
+                        name = fullName,
+                        address = address,
+                        city = city,
+                        postalCode = postalCode,
+                        phone = phone,
+                        paymentMethod = paymentMethod
+                    )
+                },
                 enabled = formValid && !isLoading,
                 modifier = Modifier.fillMaxWidth().height(52.dp),
                 shape = RoundedCornerShape(2.dp),

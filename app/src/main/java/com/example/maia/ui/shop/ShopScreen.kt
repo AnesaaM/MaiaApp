@@ -10,9 +10,16 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.border
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
@@ -36,6 +43,7 @@ import com.example.maia.model.Section
 import com.example.maia.navigation.Screen
 import com.example.maia.ui.components.BlobHeader
 import com.example.maia.ui.components.MaiaBackground
+import com.example.maia.ui.components.MaiaButton
 import com.example.maia.ui.components.MaiaText
 import com.example.maia.ui.components.MaiaTextSecondary
 import com.example.maia.ui.components.SizePickerSheet
@@ -47,6 +55,26 @@ import com.example.maia.viewmodel.WishlistViewModel
 import kotlinx.coroutines.launch
 
 private val sections = listOf("WOMAN" to Section.WOMAN, "MAN" to Section.MAN, "KIDS" to Section.KIDS)
+
+private val shopColorOptions = listOf(
+    Color.Black, Color.White, Color(0xFF1565C0), Color(0xFFC62828),
+    Color(0xFFE91E63), Color(0xFF757575), Color(0xFF1A237E), Color(0xFFD2B48C),
+    Color(0xFF5D4037), Color(0xFF2E7D32), Color(0xFFCDC302)
+)
+
+private val shopColorNames = mapOf(
+    Color.Black       to "black",
+    Color.White       to "white",
+    Color(0xFF1565C0) to "blue",
+    Color(0xFFC62828) to "red",
+    Color(0xFFE91E63) to "pink",
+    Color(0xFF757575) to "gray",
+    Color(0xFF1A237E) to "navy",
+    Color(0xFFD2B48C) to "beige",
+    Color(0xFF5D4037) to "brown",
+    Color(0xFF2E7D32) to "green",
+    Color(0xFFCDC302) to "yellow"
+)
 
 @Preview(showBackground = true, name = "Shop Screen")
 @Composable
@@ -77,6 +105,8 @@ fun ShopScreen(
 
     var showSearch by remember { mutableStateOf(false) }
     var searchQuery by remember { mutableStateOf("") }
+    var priceAsc by remember { mutableStateOf<Boolean?>(null) }
+    var selectedColor by remember { mutableStateOf<Color?>(null) }
 
     val pagerState = rememberPagerState(initialPage = initialSection, pageCount = { sections.size })
     val scope = rememberCoroutineScope()
@@ -85,6 +115,8 @@ fun ShopScreen(
 
     LaunchedEffect(pagerState.currentPage) {
         productVm.switchSection(sections[pagerState.currentPage].second)
+        priceAsc = null
+        selectedColor = null
     }
 
     Column(
@@ -156,6 +188,88 @@ fun ShopScreen(
             }
         }
 
+        // Price filter — all sections
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 2.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Surface(
+                shape = RoundedCornerShape(2.dp),
+                color = if (priceAsc == true) MaiaButton else Color.Transparent,
+                modifier = Modifier
+                    .border(0.8.dp, if (priceAsc == true) MaiaButton else Color(0xFFCCC0BB), RoundedCornerShape(2.dp))
+                    .clickable { priceAsc = if (priceAsc == true) null else true }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("PRICE", fontSize = 10.sp, letterSpacing = 1.sp, color = if (priceAsc == true) Color.White else MaiaTextSecondary)
+                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = null, modifier = Modifier.size(14.dp), tint = if (priceAsc == true) Color.White else MaiaTextSecondary)
+                }
+            }
+
+            Surface(
+                shape = RoundedCornerShape(2.dp),
+                color = if (priceAsc == false) MaiaButton else Color.Transparent,
+                modifier = Modifier
+                    .border(0.8.dp, if (priceAsc == false) MaiaButton else Color(0xFFCCC0BB), RoundedCornerShape(2.dp))
+                    .clickable { priceAsc = if (priceAsc == false) null else false }
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text("PRICE", fontSize = 10.sp, letterSpacing = 1.sp, color = if (priceAsc == false) Color.White else MaiaTextSecondary)
+                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(14.dp), tint = if (priceAsc == false) Color.White else MaiaTextSecondary)
+                }
+            }
+
+            if (priceAsc != null || selectedColor != null) {
+                Text(
+                    "CLEAR ALL",
+                    fontSize = 10.sp, letterSpacing = 1.sp,
+                    color = MaiaTextSecondary,
+                    modifier = Modifier.clickable { priceAsc = null; selectedColor = null }
+                )
+            }
+        }
+
+        // Color filter — WOMAN and MAN only
+        if (pagerState.currentPage != 2) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("COLOR", fontSize = 9.sp, letterSpacing = 2.sp, color = MaiaTextSecondary)
+                Spacer(Modifier.width(4.dp))
+                shopColorOptions.forEach { color ->
+                    val isSelected = selectedColor == color
+                    Box(
+                        modifier = Modifier
+                            .size(22.dp)
+                            .clip(CircleShape)
+                            .background(color)
+                            .border(
+                                width = if (isSelected) 2.dp else 0.8.dp,
+                                color = if (isSelected) MaiaText else Color(0xFFCCC0BB),
+                                shape = CircleShape
+                            )
+                            .clickable { selectedColor = if (isSelected) null else color }
+                    )
+                }
+            }
+        }
+
+        HorizontalDivider(color = Color(0xFFEDE8E3), thickness = 0.5.dp)
+
         if (showSearch) {
             OutlinedTextField(
                 value = searchQuery,
@@ -180,8 +294,19 @@ fun ShopScreen(
             )
         }
 
-        val displayProducts = if (categoryFilter == 0) productVm.filteredProducts
-            else productVm.filteredProducts.filter { it.categoryId == categoryFilter }
+        val baseProducts = when {
+            categoryFilter == 0 -> productVm.filteredProducts
+            else -> productVm.filteredProducts.filter { it.categoryId == categoryFilter }
+        }
+        val colorFiltered = if (selectedColor != null) {
+            val name = shopColorNames[selectedColor]
+            if (name != null) baseProducts.filter { it.color.lowercase() == name } else baseProducts
+        } else baseProducts
+        val displayProducts = when (priceAsc) {
+            true  -> colorFiltered.sortedByDescending { it.price }
+            false -> colorFiltered.sortedBy { it.price }
+            null  -> colorFiltered
+        }
 
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) {
             when {

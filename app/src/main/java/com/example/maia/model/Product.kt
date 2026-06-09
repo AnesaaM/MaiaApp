@@ -12,6 +12,6 @@ data class Product(
     val categoryId: Int = 0
 )
 
-fun KidsCards.toProduct() = Product(id, title, imageUrl, price, description, discountPercent = discountPercent)
+fun KidsCards.toProduct() = Product(id, title, imageUrl, price, description, color ?: "", discountPercent = discountPercent, categoryId = kidsCategoryId)
 fun WomenCard.toProduct() = Product(id, title, imageUrl, price, description ?: "", color ?: "", category ?: "", discountPercent, womanCategoryId)
-fun MenCard.toProduct() = Product(id, title, imageUrl, price, description, color, menCategoryName, discountPercent, menCategoryId)
+fun MenCard.toProduct() = Product(id, title, imageUrl, price, description, color ?: "", menCategoryName, discountPercent, menCategoryId)

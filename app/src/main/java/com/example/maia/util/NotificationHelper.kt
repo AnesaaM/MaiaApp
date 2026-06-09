@@ -35,7 +35,7 @@ object NotificationHelper {
 
         try {
             NotificationManagerCompat.from(context).notify(++notificationId, notification)
-        } catch (_: SecurityException) {
+        } catch (ex: SecurityException) {
             // Permission not granted yet
         }
     }
@@ -54,7 +54,7 @@ object NotificationHelper {
 
         try {
             NotificationManagerCompat.from(context).notify(++notificationId, notification)
-        } catch (_: SecurityException) {
+        } catch (ex: SecurityException) {
             // Permission not granted yet
         }
     }

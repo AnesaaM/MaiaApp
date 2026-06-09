@@ -12,8 +12,12 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,17 +58,27 @@ private val colorOptions = listOf(
 )
 
 private val colorNames = mapOf(
-    Color.Black to "black",
-    Color.White to "white",
-    Color(0xFF1565C0) to "blue",
-    Color(0xFFC62828) to "red",
-    Color(0xFFE91E63) to "pink",
-    Color(0xFF757575) to "gray",
-    Color(0xFF1A237E) to "navy",
-    Color(0xFFD2B48C) to "beige",
-    Color(0xFF5D4037) to "brown",
-    Color(0xFF2E7D32) to "green",
-    Color(0xFFCDC302) to "yellow"
+    Color.Black        to "black",
+    Color.White        to "white",
+    Color(0xFF1565C0)  to "blue",
+    Color(0xFFC62828)  to "red",
+    Color(0xFFE91E63)  to "pink",
+    Color(0xFF757575)  to "gray",
+    Color(0xFF1A237E)  to "navy",
+    Color(0xFFD2B48C)  to "beige",
+    Color(0xFF5D4037)  to "brown",
+    Color(0xFF2E7D32)  to "green",
+    Color(0xFFCDC302)  to "yellow"
+)
+
+private val womanCategoryFilter = mapOf(
+    "BAGS" to 8, "DRESSES" to 2, "JACKETS" to 4, "SHOES" to 7
+)
+private val manCategoryFilter = mapOf(
+    "SHIRTS" to 1, "TROUSERS" to 2, "SUITS" to 3, "SHOES" to 6
+)
+private val kidsCategoryKeyword = mapOf(
+    "T-SHIRTS" to "shirt", "DRESSES" to "dress", "JEANS" to "jean", "SHOES" to "shoe"
 )
 
 private val tabs = listOf("WOMAN" to Section.WOMAN, "MAN" to Section.MAN, "KIDS" to Section.KIDS)
@@ -142,7 +156,14 @@ fun SearchScreen(
                     .padding(horizontal = 20.dp, vertical = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(Icons.Default.Menu, contentDescription = null, tint = MaiaText, modifier = Modifier.size(22.dp))
+                Icon(
+                    Icons.Default.Menu,
+                    contentDescription = null,
+                    tint = MaiaText,
+                    modifier = Modifier
+                        .size(22.dp)
+                        .clickable { navController.navigate(Screen.Menu.createRoute()) }
+                )
                 Spacer(Modifier.width(16.dp))
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(24.dp),
@@ -177,6 +198,57 @@ fun SearchScreen(
                 )
             }
         }
+
+        // Search bar
+        OutlinedTextField(
+            value = productVm.searchQuery.value,
+            onValueChange = { productVm.updateSearch(it) },
+            placeholder = {
+                Text(
+                    "SEARCH PRODUCTS...",
+                    color = Color(0xFFBBABA4),
+                    fontSize = 11.sp,
+                    letterSpacing = 1.sp
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = null,
+                    tint = MaiaTextSecondary,
+                    modifier = Modifier.size(18.dp)
+                )
+            },
+            trailingIcon = {
+                if (productVm.searchQuery.value.isNotEmpty()) {
+                    IconButton(onClick = { productVm.updateSearch("") }) {
+                        Icon(
+                            Icons.Default.Close,
+                            contentDescription = "Clear",
+                            tint = MaiaTextSecondary,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp),
+            singleLine = true,
+            shape = RoundedCornerShape(2.dp),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            colors = OutlinedTextFieldDefaults.colors(
+                unfocusedBorderColor = Color(0xFFDDD0CA),
+                focusedBorderColor = MaiaText,
+                unfocusedContainerColor = Color.White,
+                focusedContainerColor = Color.White,
+            ),
+            textStyle = LocalTextStyle.current.copy(
+                fontSize = 12.sp,
+                color = MaiaText,
+                letterSpacing = 1.sp
+            )
+        )
 
         // Filter bar
         Row(
@@ -292,7 +364,7 @@ fun SearchScreen(
             HorizontalDivider(modifier = Modifier.padding(top = 8.dp), color = Color(0xFFEDE8E3), thickness = 0.5.dp)
         }
 
-        // Apply color and category filters, then sort
+        // Apply color + category filters, then sort
         val filtered = products
             .let { list ->
                 val colorName = selectedColor?.let { colorNames[it] }
@@ -300,9 +372,13 @@ fun SearchScreen(
                 else list
             }
             .let { list ->
-                if (selectedCategory != null)
-                    list.filter { it.category.uppercase().contains(selectedCategory!!.uppercase()) }
-                else list
+                if (selectedCategory != null) {
+                    when (selectedTab) {
+                        0 -> womanCategoryFilter[selectedCategory]?.let { id -> list.filter { it.categoryId == id } } ?: list
+                        1 -> manCategoryFilter[selectedCategory]?.let { id -> list.filter { it.categoryId == id } } ?: list
+                        else -> kidsCategoryKeyword[selectedCategory]?.let { kw -> list.filter { it.title.lowercase().contains(kw) } } ?: list
+                    }
+                } else list
             }
 
         val sorted = when (sortMode) {

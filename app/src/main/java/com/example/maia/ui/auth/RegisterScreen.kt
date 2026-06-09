@@ -52,7 +52,12 @@ fun RegisterScreen(navController: NavController, tokenManager: TokenManager) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var validationError by remember { mutableStateOf<String?>(null) }
+
+    var firstNameError by remember { mutableStateOf<String?>(null) }
+    var lastNameError  by remember { mutableStateOf<String?>(null) }
+    var emailError     by remember { mutableStateOf<String?>(null) }
+    var passwordError  by remember { mutableStateOf<String?>(null) }
+    var confirmError   by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(state) {
         if (state is AuthState.Success) {
@@ -83,48 +88,72 @@ fun RegisterScreen(navController: NavController, tokenManager: TokenManager) {
 
             Spacer(Modifier.height(20.dp))
 
-            MaiaTextField(label = "FIRST NAME", value = firstName, onValueChange = { firstName = it })
-            Spacer(Modifier.height(14.dp))
-            MaiaTextField(label = "LAST NAME", value = lastName, onValueChange = { lastName = it })
-            Spacer(Modifier.height(14.dp))
-            MaiaTextField(label = "EMAIL", value = email, onValueChange = { email = it }, keyboardType = KeyboardType.Email)
-            Spacer(Modifier.height(14.dp))
             MaiaTextField(
-                label = "PASSWORD",
-                value = password,
-                onValueChange = { password = it },
-                keyboardType = KeyboardType.Password,
-                visualTransformation = PasswordVisualTransformation()
+                label = "FIRST NAME", value = firstName,
+                onValueChange = { firstName = it; firstNameError = null },
+                placeholder = "First name",
+                isError = firstNameError != null,
+                errorMessage = firstNameError
             )
             Spacer(Modifier.height(14.dp))
             MaiaTextField(
-                label = "CONFIRM PASSWORD",
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it },
+                label = "LAST NAME", value = lastName,
+                onValueChange = { lastName = it; lastNameError = null },
+                placeholder = "Last name",
+                isError = lastNameError != null,
+                errorMessage = lastNameError
+            )
+            Spacer(Modifier.height(14.dp))
+            MaiaTextField(
+                label = "EMAIL", value = email,
+                onValueChange = { email = it; emailError = null },
+                keyboardType = KeyboardType.Email,
+                placeholder = "Email",
+                isError = emailError != null,
+                errorMessage = emailError
+            )
+            Spacer(Modifier.height(14.dp))
+            MaiaTextField(
+                label = "PASSWORD", value = password,
+                onValueChange = { password = it; passwordError = null },
                 keyboardType = KeyboardType.Password,
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                placeholder = "Password",
+                isError = passwordError != null,
+                errorMessage = passwordError
+            )
+            Spacer(Modifier.height(14.dp))
+            MaiaTextField(
+                label = "CONFIRM PASSWORD", value = confirmPassword,
+                onValueChange = { confirmPassword = it; confirmError = null },
+                keyboardType = KeyboardType.Password,
+                visualTransformation = PasswordVisualTransformation(),
+                placeholder = "Confirm password",
+                isError = confirmError != null,
+                errorMessage = confirmError
             )
 
             Spacer(Modifier.height(8.dp))
 
-            val errorMsg = validationError ?: (state as? AuthState.Error)?.message
-            if (errorMsg != null) {
-                Text(errorMsg, color = MaterialTheme.colorScheme.error, fontSize = 12.sp, modifier = Modifier.padding(vertical = 6.dp))
+            val serverError = (state as? AuthState.Error)?.message
+            if (serverError != null) {
+                Text(serverError, color = MaterialTheme.colorScheme.error, fontSize = 12.sp, modifier = Modifier.padding(vertical = 6.dp))
             }
 
             Spacer(Modifier.height(20.dp))
 
             Button(
                 onClick = {
-                    validationError = when {
-                        firstName.isBlank() -> "First name is required"
-                        lastName.isBlank() -> "Last name is required"
-                        email.isBlank() -> "Email is required"
-                        password.length < 6 -> "Password must be at least 6 characters"
-                        password != confirmPassword -> "Passwords do not match"
-                        else -> null
-                    }
-                    if (validationError == null) {
+                    firstNameError = if (firstName.isBlank()) "First name is required" else null
+                    lastNameError  = if (lastName.isBlank()) "Last name is required" else null
+                    emailError     = if (email.isBlank()) "Email is required"
+                                     else if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) "Invalid email format"
+                                     else null
+                    passwordError  = if (password.length < 6) "Must be at least 6 characters" else null
+                    confirmError   = if (password != confirmPassword) "Passwords do not match" else null
+
+                    val hasError = listOf(firstNameError, lastNameError, emailError, passwordError, confirmError).any { it != null }
+                    if (!hasError) {
                         vm.register(firstName, lastName, email, password)
                     }
                 },

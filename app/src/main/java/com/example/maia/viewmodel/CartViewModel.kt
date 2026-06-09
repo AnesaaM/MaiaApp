@@ -53,12 +53,17 @@ class CartViewModel : ViewModel() {
         onSuccess: () -> Unit = {},
         onError: (String) -> Unit = {}
     ) {
+        val effectivePrice = if ((product.discountPercent ?: 0) > 0)
+            product.price * (1 - product.discountPercent!! / 100.0)
+        else
+            product.price
+
         val placeholder = CartItem(
             id = -product.id,
             productId = product.id,
             productName = product.title,
             imageUrl = product.imageUrl,
-            price = product.price,
+            price = effectivePrice,
             quantity = 1,
             size = size
         )
@@ -73,7 +78,7 @@ class CartViewModel : ViewModel() {
                         productSource = productSource,
                         productName = product.title,
                         imageUrl = product.imageUrl,
-                        price = product.price,
+                        price = effectivePrice,
                         size = size
                     )
                 )
@@ -110,7 +115,15 @@ class CartViewModel : ViewModel() {
         }
     }
 
-    fun placeOrder(email: String = "", name: String = "") {
+    fun placeOrder(
+        email: String = "",
+        name: String = "",
+        address: String = "",
+        city: String = "",
+        postalCode: String = "",
+        phone: String = "",
+        paymentMethod: String = "cash"
+    ) {
         val itemsSnapshot = cartItems.value.toList()
         viewModelScope.launch {
             isLoading.value = true
@@ -122,7 +135,18 @@ class CartViewModel : ViewModel() {
                 if (email.isNotBlank()) {
                     val orderRef = "MAIA-${order.id.toString().padStart(6, '0')}"
                     launch {
-                        EmailService.sendInvoice(email, name, orderRef, order.totalAmount, itemsSnapshot)
+                        EmailService.sendInvoice(
+                            toEmail = email,
+                            userName = name,
+                            orderRef = orderRef,
+                            total = order.totalAmount,
+                            items = itemsSnapshot,
+                            address = address,
+                            city = city,
+                            postalCode = postalCode,
+                            phone = phone,
+                            paymentMethod = paymentMethod
+                        )
                     }
                 }
             } catch (e: Exception) {

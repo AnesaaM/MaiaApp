@@ -85,7 +85,7 @@ private fun fmtDate(raw: String?): String {
     return try {
         val d = raw.substring(0, 10).split("-")
         "${d[1].trimStart('0')}/${d[2].trimStart('0')}/${d[0]}"
-    } catch (_: Exception) { raw.take(10) }
+    } catch (ex: Exception) { raw.take(10) }
 }
 
 // ─── Screen entry point ───────────────────────────────────────────────────────
