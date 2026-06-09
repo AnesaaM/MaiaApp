@@ -205,12 +205,30 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             composable(Screen.Stores.route) {
                 StoresScreen(navController = navController)
             }
+            composable(Screen.AdminDashboard.route) {
+                AdminDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.SalesManagerDashboard.route) {
+                SalesManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.WomenManagerDashboard.route) {
+                WomenManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.MenManagerDashboard.route) {
+                MenManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
+            composable(Screen.KidsManagerDashboard.route) {
+                KidsManagerDashboardScreen(navController = navController, tokenManager = tokenManager)
+            }
             composable(Screen.Search.route) {
                 SearchScreen(
                     navController = navController,
                     cartViewModel = cartViewModel,
                     wishlistViewModel = wishlistViewModel
                 )
+            }
+            composable(Screen.Stores.route) {
+                StoresScreen(navController = navController)
             }
         }
     }

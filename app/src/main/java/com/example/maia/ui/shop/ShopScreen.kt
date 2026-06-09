@@ -180,8 +180,12 @@ fun ShopScreen(
             )
         }
 
-        val displayProducts = if (categoryFilter == 0) productVm.filteredProducts
-            else productVm.filteredProducts.filter { it.categoryId == categoryFilter }
+        val displayProducts = when {
+            categoryFilter == 0 -> productVm.filteredProducts
+            categoryFilter == 9 || categoryFilter == 8 ->
+                productVm.filteredProducts.filter { (it.discountPercent ?: 0) > 0 }
+            else -> productVm.filteredProducts.filter { it.categoryId == categoryFilter }
+        }
 
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) {
             when {
