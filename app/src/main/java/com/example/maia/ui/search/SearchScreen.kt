@@ -12,8 +12,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -55,6 +53,20 @@ private val colorOptions = listOf(
     Color(0xFF5D4037), Color(0xFF2E7D32), Color(0xFFCDC302)
 )
 
+private val colorNames = mapOf(
+    Color.Black to "black",
+    Color.White to "white",
+    Color(0xFF1565C0) to "blue",
+    Color(0xFFC62828) to "red",
+    Color(0xFFE91E63) to "pink",
+    Color(0xFF757575) to "gray",
+    Color(0xFF1A237E) to "navy",
+    Color(0xFFD2B48C) to "beige",
+    Color(0xFF5D4037) to "brown",
+    Color(0xFF2E7D32) to "green",
+    Color(0xFFCDC302) to "yellow"
+)
+
 private val tabs = listOf("WOMAN" to Section.WOMAN, "MAN" to Section.MAN, "KIDS" to Section.KIDS)
 private val womanCategories = listOf("BAGS", "DRESSES", "JACKETS", "SHOES")
 private val manCategories   = listOf("SHIRTS", "TROUSERS", "SUITS", "SHOES")
@@ -89,6 +101,7 @@ fun SearchScreen(
 
     LaunchedEffect(selectedTab) {
         productVm.switchSection(tabs[selectedTab].second)
+        selectedCategory = null
     }
 
     val products = productVm.filteredProducts
@@ -281,14 +294,26 @@ fun SearchScreen(
             HorizontalDivider(modifier = Modifier.padding(top = 8.dp), color = Color(0xFFEDE8E3), thickness = 0.5.dp)
         }
 
-        // Results header
+        // Apply color and category filters, then sort
+        val filtered = products
+            .let { list ->
+                val colorName = selectedColor?.let { colorNames[it] }
+                if (colorName != null) list.filter { it.color.lowercase().contains(colorName) }
+                else list
+            }
+            .let { list ->
+                if (selectedCategory != null)
+                    list.filter { it.category.uppercase().contains(selectedCategory!!.uppercase()) }
+                else list
+            }
+
         val sorted = when (sortMode) {
-            "price_asc"  -> products.sortedBy { it.price }
-            "price_desc" -> products.sortedByDescending { it.price }
-            "az"         -> products.sortedBy { it.title }
-            "za"         -> products.sortedByDescending { it.title }
-            "discount"   -> products.sortedByDescending { it.discountPercent ?: 0 }
-            else         -> products
+            "price_asc"  -> filtered.sortedBy { it.price }
+            "price_desc" -> filtered.sortedByDescending { it.price }
+            "az"         -> filtered.sortedBy { it.title }
+            "za"         -> filtered.sortedByDescending { it.title }
+            "discount"   -> filtered.sortedByDescending { it.discountPercent ?: 0 }
+            else         -> filtered
         }
 
         Text(
@@ -384,7 +409,10 @@ private fun SearchProductCard(product: Product, onAddToCart: (String) -> Unit) {
                 Text("${String.format("%.0f", salePrice)} EUR", fontSize = 10.sp, color = Color(0xFF8B1A1A))
             }
         } else {
-            Text("${String.format("%.0f", product.price)} EUR", fontSize = 10.sp, color = MaiaTextSecondary)
+            Text(
+                "${String.format("%.0f", product.price)} EUR",
+                fontSize = 10.sp, color = MaiaTextSecondary
+            )
         }
     }
 }
