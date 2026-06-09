@@ -22,6 +22,7 @@ import com.example.maia.ui.dashboard.MenManagerDashboardScreen
 import com.example.maia.ui.dashboard.SalesManagerDashboardScreen
 import com.example.maia.ui.dashboard.KidsManagerDashboardScreen
 import com.example.maia.ui.dashboard.WomenManagerDashboardScreen
+import com.example.maia.ui.checkout.OrderConfirmedScreen
 import com.example.maia.ui.auth.ForgotPasswordScreen
 import com.example.maia.ui.auth.LoginScreen
 import com.example.maia.ui.auth.RegisterScreen
@@ -139,7 +140,19 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             composable(Screen.Checkout.route) {
                 CheckoutScreen(
                     navController = navController,
-                    cartViewModel = cartViewModel
+                    cartViewModel = cartViewModel,
+                    tokenManager = tokenManager
+                )
+            }
+            composable(
+                route = Screen.OrderConfirmed.route,
+                arguments = listOf(navArgument("orderRef") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val orderRef = backStackEntry.arguments?.getString("orderRef") ?: ""
+                OrderConfirmedScreen(
+                    navController = navController,
+                    tokenManager = tokenManager,
+                    orderRef = orderRef
                 )
             }
             composable(Screen.Account.route) {
