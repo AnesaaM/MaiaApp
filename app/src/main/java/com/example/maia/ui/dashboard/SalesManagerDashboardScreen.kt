@@ -1,5 +1,6 @@
 package com.example.maia.ui.dashboard
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
@@ -11,13 +12,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.ColorPainter
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.AsyncImage
 import com.example.maia.data.TokenManager
+import com.example.maia.model.KidsCards
+import com.example.maia.model.MenCard
+import com.example.maia.model.WomenCard
 import com.example.maia.navigation.Screen
 import com.example.maia.viewmodel.AuthViewModel
 import com.example.maia.viewmodel.AuthViewModelFactory
@@ -93,7 +101,7 @@ private fun SalesOverviewTab(vm: SalesManagerViewModel) {
             Card(
                 Modifier.width(180.dp),
                 colors = CardDefaults.cardColors(containerColor = DashCardBg),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DashBorder),
+                border = BorderStroke(1.dp, DashBorder),
                 shape = RoundedCornerShape(4.dp)
             ) {
                 Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -106,103 +114,228 @@ private fun SalesOverviewTab(vm: SalesManagerViewModel) {
 }
 
 @Composable
-private fun SalesCustomersTab(vm: SalesManagerViewModel) {
+private fun SalesWomenTab(vm: SalesManagerViewModel) {
     if (vm.isLoading) { Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = DashSecText) }; return }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { Text("${vm.customers.size} CUSTOMERS", fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText) }
-        items(vm.customers) { u ->
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = DashCardBg),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DashBorder), shape = RoundedCornerShape(4.dp)) {
-                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                    Text("${u.firstName} ${u.lastName}", fontSize = 14.sp, color = Color(0xFF1C0A06))
-                    Text(u.email, fontSize = 11.sp, color = DashSecText)
-                }
+    var saleTarget by remember { mutableStateOf<WomenCard?>(null) }
+    var actionError by remember { mutableStateOf<String?>(null) }
+
+    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
+        if (actionError != null) Text(actionError!!, color = DashRedText, fontSize = 11.sp, modifier = Modifier.padding(bottom = 4.dp))
+        Text(
+            "${vm.womenCards.count { (it.discountPercent ?: 0) > 0 }} ITEMS ON SALE",
+            fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+        LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(vm.womenCards.sortedByDescending { (it.discountPercent ?: 0) > 0 }) { p ->
+                SaleProductCard(
+                    imageUrl = p.imageUrl,
+                    title = p.title,
+                    price = p.price,
+                    discountPct = p.discountPercent ?: 0,
+                    onEditSale = { saleTarget = p },
+                    onRemove = { vm.setWomenDiscount(p.id, 0) { e -> actionError = e } }
+                )
             }
+        }
+        Spacer(Modifier.height(16.dp))
+    }
+
+    saleTarget?.let { p ->
+        SalesDiscountDialog(p.title, p.price, p.discountPercent ?: 0, { saleTarget = null }) { pct ->
+            vm.setWomenDiscount(p.id, pct) { e -> actionError = e; if (e == null) saleTarget = null }
         }
     }
 }
 
 @Composable
-private fun SalesSectionTab(vm: SalesManagerViewModel, section: String) {
-    var discountTarget by remember { mutableStateOf<Triple<Int, String, Double>?>(null) }
+private fun SalesMenTab(vm: SalesManagerViewModel) {
+    if (vm.isLoading) { Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = DashSecText) }; return }
+    var saleTarget by remember { mutableStateOf<MenCard?>(null) }
     var actionError by remember { mutableStateOf<String?>(null) }
 
-    val items: List<Triple<Int, String, Double>> = when (section) {
-        "women" -> vm.womenCards.map { Triple(it.id, it.title, it.price) }
-        "men"   -> vm.menCards.map { Triple(it.id, it.title, it.price) }
-        else    -> vm.kidsCards.map { Triple(it.id, it.title, it.price) }
-    }
-    val discounts: Map<Int, Int> = when (section) {
-        "women" -> vm.womenCards.associate { it.id to (it.discountPercent ?: 0) }
-        "men"   -> vm.menCards.associate { it.id to (it.discountPercent ?: 0) }
-        else    -> vm.kidsCards.associate { it.id to (it.discountPercent ?: 0) }
+    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
+        if (actionError != null) Text(actionError!!, color = DashRedText, fontSize = 11.sp, modifier = Modifier.padding(bottom = 4.dp))
+        Text(
+            "${vm.menCards.count { (it.discountPercent ?: 0) > 0 }} ITEMS ON SALE",
+            fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+        LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(vm.menCards.sortedByDescending { (it.discountPercent ?: 0) > 0 }) { p ->
+                SaleProductCard(
+                    imageUrl = p.imageUrl,
+                    title = p.title,
+                    price = p.price,
+                    discountPct = p.discountPercent ?: 0,
+                    onEditSale = { saleTarget = p },
+                    onRemove = { vm.setMenDiscount(p, 0) { e -> actionError = e } }
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
     }
 
-    if (vm.isLoading) { Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = DashSecText) }; return }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item {
-            Text("${items.size} ${section.uppercase()} PRODUCTS", fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText)
-            if (actionError != null) Text(actionError!!, color = DashRedText, fontSize = 11.sp, modifier = Modifier.padding(vertical = 4.dp))
+    saleTarget?.let { p ->
+        SalesDiscountDialog(p.title, p.price, p.discountPercent ?: 0, { saleTarget = null }) { pct ->
+            vm.setMenDiscount(p, pct) { e -> actionError = e; if (e == null) saleTarget = null }
         }
-        items(items) { (id, title, price) ->
-            val pct = discounts[id] ?: 0
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = DashCardBg),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DashBorder), shape = RoundedCornerShape(4.dp)) {
-                Row(Modifier.padding(14.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(title, fontSize = 13.sp, color = Color(0xFF1C0A06))
-                        Text("€${"%.2f".format(price)}", fontSize = 11.sp, color = DashSecText)
+    }
+}
+
+@Composable
+private fun SalesKidsTab(vm: SalesManagerViewModel) {
+    if (vm.isLoading) { Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = DashSecText) }; return }
+    var saleTarget by remember { mutableStateOf<KidsCards?>(null) }
+    var actionError by remember { mutableStateOf<String?>(null) }
+
+    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
+        if (actionError != null) Text(actionError!!, color = DashRedText, fontSize = 11.sp, modifier = Modifier.padding(bottom = 4.dp))
+        Text(
+            "${vm.kidsCards.count { (it.discountPercent ?: 0) > 0 }} ITEMS ON SALE",
+            fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+        LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            items(vm.kidsCards.sortedByDescending { (it.discountPercent ?: 0) > 0 }) { p ->
+                SaleProductCard(
+                    imageUrl = p.imageUrl,
+                    title = p.title,
+                    price = p.price,
+                    discountPct = p.discountPercent ?: 0,
+                    onEditSale = { saleTarget = p },
+                    onRemove = { vm.setKidsDiscount(p.id, 0) { e -> actionError = e } }
+                )
+            }
+        }
+        Spacer(Modifier.height(16.dp))
+    }
+
+    saleTarget?.let { p ->
+        SalesDiscountDialog(p.title, p.price, p.discountPercent ?: 0, { saleTarget = null }) { pct ->
+            vm.setKidsDiscount(p.id, pct) { e -> actionError = e; if (e == null) saleTarget = null }
+        }
+    }
+}
+
+@Composable
+private fun SaleProductCard(
+    imageUrl: String?,
+    title: String,
+    price: Double,
+    discountPct: Int,
+    onEditSale: () -> Unit,
+    onRemove: () -> Unit
+) {
+    Card(
+        Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = DashCardBg),
+        border = BorderStroke(1.dp, DashBorder),
+        shape = RoundedCornerShape(6.dp)
+    ) {
+        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.Top) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = null,
+                modifier = Modifier.size(60.dp).clip(RoundedCornerShape(4.dp)),
+                contentScale = ContentScale.Crop,
+                placeholder = ColorPainter(Color(0xFFEEE8E2)),
+                error = ColorPainter(Color(0xFFEEE8E2))
+            )
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.Top) {
+                    Text(
+                        title, fontSize = 13.sp, fontWeight = FontWeight.Medium,
+                        color = Color(0xFF1C0A06), maxLines = 2,
+                        modifier = Modifier.weight(1f).padding(end = 8.dp)
+                    )
+                    if (discountPct > 0) {
+                        Text(
+                            "$discountPct% OFF", fontSize = 9.sp, color = DashGreenText,
+                            modifier = Modifier.background(DashGreenBg, RoundedCornerShape(20.dp))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    } else {
+                        Text(
+                            "NO SALE", fontSize = 9.sp, color = DashSecText,
+                            modifier = Modifier.background(Color(0xFFF0EBE5), RoundedCornerShape(20.dp))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
-                        if (pct > 0) Text("$pct% OFF", fontSize = 10.sp, color = DashGreenText,
-                            modifier = Modifier.background(DashGreenBg, RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 2.dp))
-                        TextButton(onClick = { discountTarget = Triple(id, title, price) }, contentPadding = PaddingValues(0.dp)) {
-                            Text(if (pct > 0) "EDIT" else "SET SALE", fontSize = 9.sp, color = Color(0xFF1C0A06))
-                        }
-                        if (pct > 0) TextButton(onClick = {
-                            when (section) {
-                                "women" -> { val c = vm.womenCards.first { it.id == id }; vm.setWomenDiscount(c.id, 0) { e -> actionError = e } }
-                                "men"   -> { val c = vm.menCards.first { it.id == id }; vm.setMenDiscount(c, 0) { e -> actionError = e } }
-                                else    -> vm.setKidsDiscount(id, 0) { e -> actionError = e }
-                            }
-                        }, contentPadding = PaddingValues(0.dp)) { Text("REMOVE", fontSize = 9.sp, color = DashSecText) }
+                }
+                Text("€${"%.2f".format(price)}", fontSize = 12.sp, color = DashSecText)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        SalesBtnDark(if (discountPct > 0) "EDIT SALE" else "SET SALE") { onEditSale() }
+                        if (discountPct > 0) SalesBtnOutlined("REMOVE") { onRemove() }
                     }
                 }
             }
         }
-    }
-
-    discountTarget?.let { (id, title, _) ->
-        val currentPct = discounts[id] ?: 0
-        SalesDiscountDialog(title, currentPct, onDismiss = { discountTarget = null },
-            onConfirm = { pct ->
-                when (section) {
-                    "women" -> { val c = vm.womenCards.first { it.id == id }; vm.setWomenDiscount(c.id, pct) { e -> actionError = e; if (e == null) discountTarget = null } }
-                    "men"   -> { val c = vm.menCards.first { it.id == id }; vm.setMenDiscount(c, pct) { e -> actionError = e; if (e == null) discountTarget = null } }
-                    else    -> vm.setKidsDiscount(id, pct) { e -> actionError = e; if (e == null) discountTarget = null }
-                }
-            })
     }
 }
 
 @Composable
 private fun ActiveSalesTab(vm: SalesManagerViewModel) {
     if (vm.isLoading) { Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = DashSecText) }; return }
-    LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        item { Text("${vm.allOnSale.size} ACTIVE SALES", fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText) }
+    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
+        Text(
+            "${vm.allOnSale.size} ACTIVE SALES",
+            fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
         if (vm.allOnSale.isEmpty()) {
-            item { Box(Modifier.fillMaxWidth().padding(48.dp), Alignment.Center) { Text("No active sales at the moment.", color = DashSecText, fontSize = 12.sp) } }
-        }
-        items(vm.allOnSale) { (title, section) ->
-            Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = DashCardBg),
-                border = androidx.compose.foundation.BorderStroke(1.dp, DashBorder), shape = RoundedCornerShape(4.dp)) {
-                Row(Modifier.padding(14.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                    Text(title, fontSize = 13.sp, color = Color(0xFF1C0A06), modifier = Modifier.weight(1f))
-                    Text(section, fontSize = 10.sp, color = DashSecText,
-                        modifier = Modifier.background(Color(0xFFF0ECE8), RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 2.dp))
+            Box(Modifier.fillMaxWidth().padding(48.dp), Alignment.Center) {
+                Text("No active sales at the moment.", color = DashSecText, fontSize = 12.sp)
+            }
+        } else {
+            LazyColumn(Modifier.weight(1f).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(vm.allOnSale) { item ->
+                    Card(
+                        Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = DashCardBg),
+                        border = BorderStroke(1.dp, DashBorder),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            AsyncImage(
+                                model = item.imageUrl,
+                                contentDescription = null,
+                                modifier = Modifier.size(60.dp).clip(RoundedCornerShape(4.dp)),
+                                contentScale = ContentScale.Crop,
+                                placeholder = ColorPainter(Color(0xFFEEE8E2)),
+                                error = ColorPainter(Color(0xFFEEE8E2))
+                            )
+                            Spacer(Modifier.width(12.dp))
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                                    Text(
+                                        item.title, fontSize = 13.sp, fontWeight = FontWeight.Medium,
+                                        color = Color(0xFF1C0A06),
+                                        modifier = Modifier.weight(1f).padding(end = 8.dp)
+                                    )
+                                    Text(
+                                        item.section, fontSize = 9.sp, color = DashSecText,
+                                        modifier = Modifier.background(Color(0xFFF0EBE5), RoundedCornerShape(20.dp))
+                                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                                Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                                    Text("€${"%.2f".format(item.price)}", fontSize = 12.sp, color = DashSecText)
+                                    Text(
+                                        "${item.discountPercent}% OFF", fontSize = 9.sp, color = DashGreenText,
+                                        modifier = Modifier.background(DashGreenBg, RoundedCornerShape(20.dp))
+                                            .padding(horizontal = 8.dp, vertical = 3.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+        Spacer(Modifier.height(16.dp))
     }
 }
 
@@ -342,11 +475,90 @@ private fun SalesDiscountDialog(title: String, currentPct: Int, onDismiss: () ->
     AlertDialog(onDismissRequest = onDismiss,
         title = { Text("SET SALE", fontSize = 11.sp, letterSpacing = 2.sp) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(title, fontSize = 13.sp, color = Color(0xFF1C0A06))
-                OutlinedTextField(value = pct, onValueChange = { pct = it }, label = { Text("Discount %") }, singleLine = true)
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("PRODUCT", fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText)
+                    OutlinedTextField(
+                        value = title, onValueChange = {}, readOnly = true, singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = DashBorder,
+                            focusedBorderColor = DashBorder,
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White
+                        )
+                    )
+                }
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("DISCOUNT PERCENTAGE", fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText)
+                    OutlinedTextField(
+                        value = pct, onValueChange = { pct = it },
+                        placeholder = { Text("e.g. 20", color = Color(0xFFBBABA4), fontSize = 13.sp) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedBorderColor = DashBorder,
+                            focusedBorderColor = Color(0xFF1C0A06),
+                            unfocusedContainerColor = Color.White,
+                            focusedContainerColor = Color.White
+                        )
+                    )
+                }
+                if (salePrice != null) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text("SALE PRICE PREVIEW", fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText)
+                        OutlinedTextField(
+                            value = "€${"%.2f".format(salePrice)}", onValueChange = {},
+                            readOnly = true, singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                unfocusedBorderColor = DashBorder,
+                                focusedBorderColor = DashBorder,
+                                unfocusedContainerColor = Color.White,
+                                focusedContainerColor = Color.White
+                            )
+                        )
+                    }
+                }
             }
         },
-        confirmButton = { TextButton(onClick = { onConfirm(pct.toIntOrNull() ?: 0) }) { Text("APPLY") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("CANCEL") } })
+        confirmButton = {
+            Button(
+                onClick = { onConfirm(pct.toIntOrNull() ?: 0) },
+                shape = RoundedCornerShape(4.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1C0A06))
+            ) { Text("APPLY SALE", fontSize = 10.sp, letterSpacing = 1.sp) }
+        },
+        dismissButton = {
+            OutlinedButton(
+                onClick = onDismiss,
+                shape = RoundedCornerShape(4.dp),
+                border = BorderStroke(1.dp, Color(0xFFD0C4BC)),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1C0A06))
+            ) { Text("CANCEL", fontSize = 10.sp, letterSpacing = 1.sp) }
+        }
+    )
+}
+
+@Composable
+private fun SalesBtnDark(label: String, onClick: () -> Unit) {
+    Button(
+        onClick = onClick,
+        shape = RoundedCornerShape(4.dp),
+        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1C0A06)),
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+        modifier = Modifier.height(30.dp)
+    ) { Text(label, fontSize = 9.sp, letterSpacing = 1.sp) }
+}
+
+@Composable
+private fun SalesBtnOutlined(label: String, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        shape = RoundedCornerShape(20.dp),
+        border = BorderStroke(1.dp, Color(0xFFD0C4BC)),
+        contentPadding = PaddingValues(horizontal = 14.dp, vertical = 0.dp),
+        modifier = Modifier.height(30.dp),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color(0xFF1C0A06))
+    ) { Text(label, fontSize = 9.sp, letterSpacing = 1.sp) }
 }

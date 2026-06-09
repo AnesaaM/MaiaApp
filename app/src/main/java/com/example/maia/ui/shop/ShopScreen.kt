@@ -294,6 +294,7 @@ fun ShopScreen(
             )
         }
 
+<<<<<<< HEAD
         val baseProducts = when {
             categoryFilter == 0 -> productVm.filteredProducts
             else -> productVm.filteredProducts.filter { it.categoryId == categoryFilter }
@@ -307,6 +308,14 @@ fun ShopScreen(
             false -> colorFiltered.sortedBy { it.price }
             null  -> colorFiltered
         }
+=======
+        val displayProducts = when {
+            categoryFilter == 0 -> productVm.filteredProducts
+            categoryFilter == 9 || categoryFilter == 8 ->
+                productVm.filteredProducts.filter { (it.discountPercent ?: 0) > 0 }
+            else -> productVm.filteredProducts.filter { it.categoryId == categoryFilter }
+        }
+>>>>>>> origin/orgesa
 
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize()) {
             when {
