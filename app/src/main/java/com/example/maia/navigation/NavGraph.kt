@@ -205,6 +205,13 @@ fun NavGraph(navController: NavHostController, tokenManager: TokenManager) {
             composable(Screen.Stores.route) {
                 StoresScreen(navController = navController)
             }
+            composable(Screen.Search.route) {
+                SearchScreen(
+                    navController = navController,
+                    cartViewModel = cartViewModel,
+                    wishlistViewModel = wishlistViewModel
+                )
+            }
         }
     }
 }
