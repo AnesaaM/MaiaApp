@@ -125,13 +125,27 @@ class CartViewModel : ViewModel() {
         paymentMethod: String = "cash"
     ) {
         val itemsSnapshot = cartItems.value.toList()
+        val totalWithShipping = totalPrice + 4.99
+        
         viewModelScope.launch {
             isLoading.value = true
             try {
-                val order = RetrofitInstance.orderServiceApi.placeOrder(JsonObject())
+                val body = JsonObject().apply {
+                    addProperty("email", email)
+                    addProperty("fullName", name)
+                    addProperty("address", address)
+                    addProperty("city", city)
+                    addProperty("postalCode", postalCode)
+                    addProperty("phone", phone)
+                    addProperty("paymentMethod", paymentMethod)
+                    addProperty("totalAmount", totalWithShipping)
+                }
+                
+                val order = RetrofitInstance.orderServiceApi.placeOrder(body)
                 placedOrder.value = order
                 cartItems.value = emptyList()
                 orderPlaced.value = true
+
                 if (email.isNotBlank()) {
                     val orderRef = "MAIA-${order.id.toString().padStart(6, '0')}"
                     launch {

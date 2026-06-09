@@ -47,6 +47,12 @@ fun CheckoutScreen(navController: NavController, cartViewModel: CartViewModel, t
     val orderPlaced = cartViewModel.orderPlaced.value
     val placedOrder = cartViewModel.placedOrder.value
 
+    LaunchedEffect(Unit) {
+        if (cartViewModel.cartItems.value.isEmpty()) {
+            cartViewModel.loadCart()
+        }
+    }
+
     LaunchedEffect(orderPlaced) {
         if (orderPlaced && placedOrder != null) {
             val orderRef = "MAIA-${placedOrder.id.toString().padStart(6, '0')}"
@@ -57,9 +63,14 @@ fun CheckoutScreen(navController: NavController, cartViewModel: CartViewModel, t
         }
     }
 
+    val subtotal = cartViewModel.totalPrice
+    val shipping = if (subtotal > 0) 4.99 else 0.0
+    val total = subtotal + shipping
+    val count = cartViewModel.itemCount
+    
     val cardValid = paymentMethod == "cash" ||
         (cardNumber.isNotBlank() && cardExpiry.isNotBlank() && cardCvc.isNotBlank())
-    val formValid = fullName.isNotBlank() && email.isNotBlank() && cardValid
+    val formValid = fullName.isNotBlank() && email.isNotBlank() && cardValid && count > 0
 
     Column(
         modifier = Modifier
@@ -116,14 +127,27 @@ fun CheckoutScreen(navController: NavController, cartViewModel: CartViewModel, t
             Spacer(Modifier.height(8.dp))
 
             SectionLabel("ORDER SUMMARY")
-            val total = cartViewModel.totalPrice
-            val count = cartViewModel.itemCount
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("$count item${if (count != 1) "s" else ""}", fontSize = 12.sp, color = MaiaTextSecondary)
-                Text("${String.format("%.0f", total)} EUR", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaiaText)
+                Text("${String.format("%.2f", subtotal)} EUR", fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = MaiaText)
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Shipping", fontSize = 12.sp, color = MaiaTextSecondary)
+                Text("${String.format("%.2f", shipping)} EUR", fontSize = 13.sp, color = MaiaText)
+            }
+            HorizontalDivider(color = Color(0xFFEDE8E3), thickness = 0.5.dp)
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("TOTAL", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaiaText)
+                Text("${String.format("%.2f", total)} EUR", fontSize = 15.sp, fontWeight = FontWeight.Bold, color = MaiaText)
             }
 
             Spacer(Modifier.height(4.dp))
@@ -230,7 +254,7 @@ fun CheckoutScreen(navController: NavController, cartViewModel: CartViewModel, t
                 if (isLoading) {
                     CircularProgressIndicator(color = Color.White, strokeWidth = 1.5.dp, modifier = Modifier.size(18.dp))
                 } else {
-                    Text("PLACE ORDER — ${String.format("%.0f", total)} EUR", letterSpacing = 2.sp, fontSize = 11.sp)
+                    Text("PLACE ORDER — ${String.format("%.2f", total)} EUR", letterSpacing = 2.sp, fontSize = 11.sp)
                 }
             }
         }

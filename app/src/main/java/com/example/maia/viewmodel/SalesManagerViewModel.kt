@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.maia.model.KidsCards
 import com.example.maia.model.MenCard
 import com.example.maia.model.WomenCard
+import com.example.maia.model.admin.User
 import com.example.maia.model.men.MenCardRequest
 import com.example.maia.model.order.Order
 import com.example.maia.model.women.SetDiscountRequest
@@ -27,6 +28,7 @@ class SalesManagerViewModel : ViewModel() {
     var womenCards by mutableStateOf<List<WomenCard>>(emptyList()); private set
     var menCards by mutableStateOf<List<MenCard>>(emptyList()); private set
     var kidsCards by mutableStateOf<List<KidsCards>>(emptyList()); private set
+    var customers by mutableStateOf<List<User>>(emptyList()); private set
     var orders by mutableStateOf<List<Order>>(emptyList()); private set
     var isLoading by mutableStateOf(false); private set
     var error by mutableStateOf<String?>(null); private set
@@ -40,6 +42,7 @@ class SalesManagerViewModel : ViewModel() {
                 womenCards = RetrofitInstance.womenManagerApi.getAllCards()
                 menCards = RetrofitInstance.menManagerApi.getAllCards()
                 kidsCards = RetrofitInstance.kidsApi.getKidsCards()
+                customers = RetrofitInstance.adminApi.getCustomers()
                 orders = RetrofitInstance.orderServiceApi.getAllOrders()
             } catch (e: Exception) {
                 error = e.message ?: "Failed to load"

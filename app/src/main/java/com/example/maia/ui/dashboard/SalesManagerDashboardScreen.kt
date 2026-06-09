@@ -18,6 +18,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.maia.data.TokenManager
+import com.example.maia.model.MenCard
+import com.example.maia.model.WomenCard
+import com.example.maia.model.admin.User
+import com.example.maia.model.order.Order
 import com.example.maia.navigation.Screen
 import com.example.maia.viewmodel.AuthViewModel
 import com.example.maia.viewmodel.AuthViewModelFactory
@@ -193,12 +197,12 @@ private fun ActiveSalesTab(vm: SalesManagerViewModel) {
         if (vm.allOnSale.isEmpty()) {
             item { Box(Modifier.fillMaxWidth().padding(48.dp), Alignment.Center) { Text("No active sales at the moment.", color = DashSecText, fontSize = 12.sp) } }
         }
-        items(vm.allOnSale) { (title, section) ->
+        items(vm.allOnSale) { saleItem ->
             Card(Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = DashCardBg),
                 border = androidx.compose.foundation.BorderStroke(1.dp, DashBorder), shape = RoundedCornerShape(4.dp)) {
                 Row(Modifier.padding(14.dp), Arrangement.SpaceBetween, Alignment.CenterVertically) {
-                    Text(title, fontSize = 13.sp, color = Color(0xFF1C0A06), modifier = Modifier.weight(1f))
-                    Text(section, fontSize = 10.sp, color = DashSecText,
+                    Text(saleItem.title, fontSize = 13.sp, color = Color(0xFF1C0A06), modifier = Modifier.weight(1f))
+                    Text(saleItem.section, fontSize = 10.sp, color = DashSecText,
                         modifier = Modifier.background(Color(0xFFF0ECE8), RoundedCornerShape(12.dp)).padding(horizontal = 8.dp, vertical = 2.dp))
                 }
             }
