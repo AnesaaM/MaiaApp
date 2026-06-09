@@ -29,7 +29,8 @@ private val SalesNavItems = listOf(
     DashNavItem("◇", "WOMEN"),
     DashNavItem("◆", "MEN"),
     DashNavItem("◇", "KIDS"),
-    DashNavItem("◑", "ACTIVE SALES")
+    DashNavItem("◑", "ACTIVE SALES"),
+    DashNavItem("▣", "ORDERS")
 )
 
 @Composable
@@ -67,6 +68,7 @@ fun SalesManagerDashboardScreen(navController: NavController, tokenManager: Toke
                 3 -> SalesSectionTab(vm, "men")
                 4 -> SalesSectionTab(vm, "kids")
                 5 -> ActiveSalesTab(vm)
+                6 -> SalesOrdersTab(vm)
             }
         }
     }
@@ -80,7 +82,8 @@ private fun SalesOverviewTab(vm: SalesManagerViewModel) {
         "Men Products" to vm.menCards.size.toString(),
         "Kids Products" to vm.kidsCards.size.toString(),
         "Items on Sale" to vm.allOnSale.size.toString(),
-        "Customers" to vm.customers.size.toString()
+        "Customers" to vm.customers.size.toString(),
+        "Total Orders" to vm.orders.size.toString()
     )
     Row(
         Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 8.dp),
@@ -200,6 +203,136 @@ private fun ActiveSalesTab(vm: SalesManagerViewModel) {
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun SalesOrdersTab(vm: SalesManagerViewModel) {
+    if (vm.isLoading) { Box(Modifier.fillMaxSize(), Alignment.Center) { CircularProgressIndicator(color = DashSecText) }; return }
+
+    var statusTarget by remember { mutableStateOf<Pair<Int, String>?>(null) }
+    var actionError by remember { mutableStateOf<String?>(null) }
+
+    val statusOptions = listOf("Pending", "Processing", "Shipped", "Delivered", "Cancelled")
+
+    LazyColumn(
+        Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 24.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Text("${vm.orders.size} ORDERS", fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText)
+            if (actionError != null) Text(actionError!!, color = DashRedText, fontSize = 11.sp, modifier = Modifier.padding(vertical = 4.dp))
+        }
+        if (vm.orders.isEmpty()) {
+            item {
+                Box(Modifier.fillMaxWidth().padding(48.dp), Alignment.Center) {
+                    Text("No orders yet.", color = DashSecText, fontSize = 12.sp)
+                }
+            }
+        }
+        items(vm.orders, key = { it.id }) { order ->
+            val statusColor = when (order.status.lowercase()) {
+                "delivered" -> DashGreenText
+                "cancelled" -> DashRedText
+                "shipped"   -> Color(0xFF1565C0)
+                "processing"-> Color(0xFFE65100)
+                else        -> DashSecText
+            }
+            val statusBg = when (order.status.lowercase()) {
+                "delivered" -> DashGreenBg
+                "cancelled" -> Color(0xFFFFEBEB)
+                "shipped"   -> Color(0xFFE3F0FF)
+                "processing"-> Color(0xFFFFF3E0)
+                else        -> Color(0xFFF0ECE8)
+            }
+            Card(
+                Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = DashCardBg),
+                border = androidx.compose.foundation.BorderStroke(1.dp, DashBorder),
+                shape = RoundedCornerShape(4.dp)
+            ) {
+                Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween, Alignment.CenterVertically) {
+                        Text(
+                            "MAIA-${order.id.toString().padStart(6, '0')}",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF1C0A06)
+                        )
+                        Text(
+                            order.status.uppercase(),
+                            fontSize = 9.sp,
+                            letterSpacing = 1.sp,
+                            color = statusColor,
+                            modifier = Modifier
+                                .background(statusBg, RoundedCornerShape(12.dp))
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        )
+                    }
+                    Row(Modifier.fillMaxWidth(), Arrangement.SpaceBetween) {
+                        Text(
+                            order.createdAt.take(10),
+                            fontSize = 11.sp,
+                            color = DashSecText
+                        )
+                        Text(
+                            "€${"%.2f".format(order.totalAmount)}",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = Color(0xFF1C0A06)
+                        )
+                    }
+                    if (!order.items.isNullOrEmpty()) {
+                        Text(
+                            "${order.items.size} item${if (order.items.size != 1) "s" else ""}",
+                            fontSize = 10.sp,
+                            color = DashSecText
+                        )
+                    }
+                    TextButton(
+                        onClick = { statusTarget = order.id to order.status },
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text("UPDATE STATUS", fontSize = 9.sp, letterSpacing = 1.sp, color = Color(0xFF1C0A06))
+                    }
+                }
+            }
+        }
+    }
+
+    statusTarget?.let { (orderId, currentStatus) ->
+        AlertDialog(
+            onDismissRequest = { statusTarget = null },
+            title = { Text("UPDATE STATUS", fontSize = 11.sp, letterSpacing = 2.sp) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Text("MAIA-${orderId.toString().padStart(6, '0')}", fontSize = 12.sp, color = DashSecText)
+                    Spacer(Modifier.height(8.dp))
+                    statusOptions.forEach { status ->
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            RadioButton(
+                                selected = currentStatus.equals(status, ignoreCase = true),
+                                onClick = { statusTarget = orderId to status }
+                            )
+                            Text(status, fontSize = 13.sp, color = Color(0xFF1C0A06))
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.updateOrderStatus(orderId, currentStatus) { err ->
+                        actionError = err
+                        if (err == null) statusTarget = null
+                    }
+                }) { Text("APPLY") }
+            },
+            dismissButton = { TextButton(onClick = { statusTarget = null }) { Text("CANCEL") } }
+        )
     }
 }
 
