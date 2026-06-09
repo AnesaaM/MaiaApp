@@ -8,6 +8,9 @@ import com.example.maia.model.cart.AddToCartRequest
 import com.example.maia.model.cart.CartItem
 import com.example.maia.model.cart.CartResponse
 import com.example.maia.network.RetrofitInstance
+import com.example.maia.model.order.Order
+import com.example.maia.util.EmailService
+import com.google.gson.JsonObject
 import kotlinx.coroutines.launch
 
 class CartViewModel : ViewModel() {
@@ -19,6 +22,8 @@ class CartViewModel : ViewModel() {
     var error = mutableStateOf<String?>(null)
         private set
     var orderPlaced = mutableStateOf(false)
+        private set
+    var placedOrder = mutableStateOf<Order?>(null)
         private set
 
     val totalPrice: Double
@@ -105,13 +110,21 @@ class CartViewModel : ViewModel() {
         }
     }
 
-    fun placeOrder() {
+    fun placeOrder(email: String = "", name: String = "") {
+        val itemsSnapshot = cartItems.value.toList()
         viewModelScope.launch {
             isLoading.value = true
             try {
-                RetrofitInstance.orderServiceApi.placeOrder()
+                val order = RetrofitInstance.orderServiceApi.placeOrder(JsonObject())
+                placedOrder.value = order
                 cartItems.value = emptyList()
                 orderPlaced.value = true
+                if (email.isNotBlank()) {
+                    val orderRef = "MAIA-${order.id.toString().padStart(6, '0')}"
+                    launch {
+                        EmailService.sendInvoice(email, name, orderRef, order.totalAmount, itemsSnapshot)
+                    }
+                }
             } catch (e: Exception) {
                 error.value = e.message ?: "Failed to place order"
             } finally {
@@ -122,6 +135,7 @@ class CartViewModel : ViewModel() {
 
     fun clearOrderPlaced() {
         orderPlaced.value = false
+        placedOrder.value = null
     }
 
     fun clearError() {
