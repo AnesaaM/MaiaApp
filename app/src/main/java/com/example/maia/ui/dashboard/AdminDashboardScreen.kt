@@ -16,8 +16,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import android.content.Intent
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -55,6 +57,7 @@ private val AdminNavItems = listOf(
     DashNavItem("◆", "OVERVIEW"),
     DashNavItem("○", "CUSTOMERS"),
     DashNavItem("○", "STAFF"),
+    DashNavItem("▣", "ORDERS"),
     DashNavItem("◇", "WOMEN SECTION"),
     DashNavItem("◆", "MEN SECTION"),
     DashNavItem("◇", "KIDS SECTION"),
@@ -125,10 +128,11 @@ fun AdminDashboardScreen(navController: NavController, tokenManager: TokenManage
                 0 -> AdminOverviewTab(vm)
                 1 -> AdminCustomersTab(vm)
                 2 -> AdminStaffTab(vm)
-                3 -> AdminProductsTab(vm, "women")
-                4 -> AdminProductsTab(vm, "men")
-                5 -> AdminProductsTab(vm, "kids")
-                6 -> AdminSalesTab(vm)
+                3 -> AdminOrdersTab(vm)
+                4 -> AdminProductsTab(vm, "women")
+                5 -> AdminProductsTab(vm, "men")
+                6 -> AdminProductsTab(vm, "kids")
+                7 -> AdminSalesTab(vm)
             }
         }
     }
@@ -143,6 +147,7 @@ private fun AdminOverviewTab(vm: AdminViewModel) {
     val stats = listOf(
         "Customers"      to vm.customers.size,
         "Staff Members"  to vm.staff.size,
+        "Total Orders"   to vm.orders.size,
         "Women Products" to vm.womenCards.size,
         "Men Products"   to vm.menCards.size,
         "Kids Products"  to vm.kidsCards.size
@@ -630,6 +635,189 @@ private fun KidsSaleActions(p: KidsCards, vm: AdminViewModel, onError: (String?)
             vm.setKidsDiscount(p.id, newPct) { e -> onError(e) }
             showDialog = false
         }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ORDERS
+// ═══════════════════════════════════════════════════════════════════════════
+@Composable
+private fun AdminOrdersTab(vm: AdminViewModel) {
+    if (vm.isLoading) { LoadingBox(); return }
+
+    val context = LocalContext.current
+    var search by remember { mutableStateOf("") }
+    var statusTarget by remember { mutableStateOf<Pair<Int, String>?>(null) }
+    var actionError by remember { mutableStateOf<String?>(null) }
+    val statusOptions = listOf("Pending", "Processing", "Shipped", "Delivered", "Cancelled")
+
+    val filtered = vm.orders.filter { order ->
+        search.isBlank() ||
+        "MAIA-${order.id.toString().padStart(6, '0')}".contains(search, true) ||
+        order.id.toString().contains(search) ||
+        order.status.contains(search, true)
+    }
+
+    Column(Modifier.fillMaxSize().padding(horizontal = 24.dp)) {
+        Row(
+            Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            AdminSearchBar(search, "Search by order ID or status...") { search = it }
+            Spacer(Modifier.weight(1f))
+            AdminBtnOutlined("↓ CSV") {
+                val csv = buildString {
+                    appendLine("ORDER,STATUS,DATE,TOTAL,ITEMS")
+                    vm.orders.forEach { o ->
+                        val ref = "MAIA-${o.id.toString().padStart(6, '0')}"
+                        val items = o.items?.joinToString("; ") {
+                            "${it.product?.title ?: "Product #${it.productId}"} x${it.quantity}"
+                        } ?: "-"
+                        appendLine("$ref,${o.status},${o.createdAt.take(10)},${String.format("%.2f", o.totalAmount)},\"$items\"")
+                    }
+                }
+                val intent = Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, csv)
+                    putExtra(Intent.EXTRA_SUBJECT, "MAIA Orders Export")
+                }
+                context.startActivity(Intent.createChooser(intent, "Export CSV"))
+            }
+        }
+
+        if (actionError != null) {
+            Text(actionError!!, color = DashRedText, fontSize = 11.sp, modifier = Modifier.padding(bottom = 4.dp))
+        }
+        Text("${filtered.size} ORDERS", fontSize = 9.sp, letterSpacing = 1.5.sp, color = DashSecText,
+            modifier = Modifier.padding(bottom = 8.dp))
+
+        LazyColumn(
+            Modifier.weight(1f).fillMaxWidth()
+                .border(1.dp, DashBorder, RoundedCornerShape(6.dp))
+                .clip(RoundedCornerShape(6.dp))
+        ) {
+            stickyHeader {
+                AdminHeaderRow {
+                    AdminHeaderCell("ORDER", Modifier.width(120.dp))
+                    AdminHeaderCell("PRODUCTS", Modifier.weight(1f))
+                    AdminHeaderCell("TOTAL", Modifier.width(70.dp))
+                    AdminHeaderCell("", Modifier.width(76.dp))
+                }
+            }
+            if (filtered.isEmpty()) {
+                item {
+                    Box(Modifier.fillMaxWidth().padding(32.dp), Alignment.Center) {
+                        Text("No orders found.", color = DashSecText, fontSize = 12.sp)
+                    }
+                }
+            }
+            items(filtered, key = { it.id }) { order ->
+                val statusColor = when (order.status.lowercase()) {
+                    "delivered"  -> DashGreenText
+                    "cancelled"  -> DashRedText
+                    "shipped"    -> Color(0xFF1565C0)
+                    "processing" -> Color(0xFFE65100)
+                    else         -> DashSecText
+                }
+                val statusBg = when (order.status.lowercase()) {
+                    "delivered"  -> DashGreenBg
+                    "cancelled"  -> Color(0xFFFFEBEB)
+                    "shipped"    -> Color(0xFFE3F0FF)
+                    "processing" -> Color(0xFFFFF3E0)
+                    else         -> Color(0xFFF0ECE8)
+                }
+                AdminDataRow {
+                    AdminDataCell(Modifier.width(120.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(
+                                "MAIA-${order.id.toString().padStart(6, '0')}",
+                                fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = ActionDark
+                            )
+                            Text(
+                                order.status.uppercase(),
+                                fontSize = 8.sp, letterSpacing = 0.5.sp, color = statusColor,
+                                modifier = Modifier.background(statusBg, RoundedCornerShape(10.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                            Text(order.createdAt.take(10), fontSize = 9.sp, color = DashSecText)
+                        }
+                    }
+                    AdminDataCell(Modifier.weight(1f)) {
+                        if (order.items.isNullOrEmpty()) {
+                            Text("—", fontSize = 12.sp, color = DashSecText)
+                        } else {
+                            Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                order.items.forEach { item ->
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                    ) {
+                                        val imgUrl = item.product?.imageUrl
+                                        if (!imgUrl.isNullOrBlank()) {
+                                            AsyncImage(
+                                                model = imgUrl, contentDescription = null,
+                                                modifier = Modifier.size(36.dp).clip(RoundedCornerShape(4.dp)),
+                                                contentScale = ContentScale.Crop
+                                            )
+                                        }
+                                        Column {
+                                            Text(
+                                                item.product?.title ?: "Product #${item.productId}",
+                                                fontSize = 10.sp, color = ActionDark, maxLines = 1
+                                            )
+                                            Text(
+                                                "€${"%.2f".format(item.price)} × ${item.quantity}",
+                                                fontSize = 9.sp, color = DashSecText
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    AdminDataCell(Modifier.width(70.dp)) {
+                        Text(
+                            "€${"%.0f".format(order.totalAmount)}",
+                            fontSize = 13.sp, fontWeight = FontWeight.SemiBold, color = ActionDark
+                        )
+                    }
+                    AdminDataCell(Modifier.width(76.dp)) {
+                        AdminBtnOutlined("STATUS") { statusTarget = order.id to order.status }
+                    }
+                }
+                HorizontalDivider(color = RowDivider, thickness = 0.5.dp)
+            }
+        }
+    }
+
+    statusTarget?.let { (orderId, currentStatus) ->
+        var selected by remember(orderId) { mutableStateOf(currentStatus) }
+        AlertDialog(
+            onDismissRequest = { statusTarget = null },
+            title = { Text("UPDATE STATUS", fontSize = 11.sp, letterSpacing = 2.sp) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text("MAIA-${orderId.toString().padStart(6, '0')}", fontSize = 12.sp, color = DashSecText)
+                    Spacer(Modifier.height(8.dp))
+                    statusOptions.forEach { status ->
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = selected.equals(status, ignoreCase = true), onClick = { selected = status })
+                            Text(status, fontSize = 13.sp, color = ActionDark)
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    vm.updateOrderStatus(orderId, selected) { err ->
+                        actionError = err
+                        if (err == null) statusTarget = null
+                    }
+                }) { Text("APPLY") }
+            },
+            dismissButton = { TextButton(onClick = { statusTarget = null }) { Text("CANCEL") } }
+        )
     }
 }
 
